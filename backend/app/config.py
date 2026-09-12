@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     agent_mode: Literal["fake", "gemini"] = "fake"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
+    # Free-tier Gemini limits requests per MINUTE, not only per day
+    # (gemini-3.1-flash-lite: 15/min). A negotiation fires calls back to back
+    # and will trip it partway through unless they are paced. Read the real
+    # number off https://aistudio.google.com/rate-limit for your model.
+    gemini_max_rpm: int = 15
+    gemini_max_attempts: int = 4
 
     max_rounds_per_candidate: int = 4
     max_candidates_per_negotiation: int = 3
