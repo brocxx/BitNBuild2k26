@@ -24,6 +24,7 @@ import type {
   TransportOption,
   UpdateListingInput,
 } from "./types";
+import { DATASET_MATERIALS, DATASET_PATHWAYS } from "../data/datasetReference";
 
 const now = () => new Date().toISOString();
 const inHours = (h: number) => new Date(Date.now() + h * 3600_000).toISOString();
@@ -31,11 +32,11 @@ const uid = (prefix: string) => `${prefix}_${Math.random().toString(36).slice(2,
 
 const ME: Business = {
   id: "biz_demo_buyer",
-  name: "Enterprise KA-ENT-000179",
-  enterprise_id: "KA-ENT-000179",
+  name: "Enterprise KA-ENT-000783",
+  enterprise_id: "KA-ENT-000783",
   roles: ["buyer", "seller"],
-  receiving_processes: ["brick_kiln_fuel"],
-  location: { district: "KOLAR", lat: 13.1359, lon: 78.1294, precision: "district" },
+  receiving_processes: DATASET_PATHWAYS.map((p) => p.process_id),
+  location: { district: "BENGALURU (URBAN)", lat: 12.9716, lon: 77.5946, precision: "district" },
 };
 
 const SELLER_KOLAR: Business = {
@@ -66,17 +67,18 @@ const SELLER_BLR_URBAN: Business = {
 };
 
 const REFERENCE: ReferenceData = {
-  materials: [{ id: "rice_husk", name: "Rice Husk" }],
+  materials: DATASET_MATERIALS,
   districts: [
     { name: "KOLAR", lat: 13.1359, lon: 78.1294 },
     { name: "BENGALURU (RURAL)", lat: 13.2847, lon: 77.5375 },
     { name: "BENGALURU (URBAN)", lat: 12.9716, lon: 77.5946 },
     { name: "MANDYA", lat: 12.5223, lon: 76.8975 },
   ],
-  receiving_processes: [
-    { id: "brick_kiln_fuel", name: "Brick Kiln Fuel", material_ids: ["rice_husk"] },
-    { id: "boiler_fuel", name: "Boiler Fuel", material_ids: ["rice_husk"] },
-  ],
+  receiving_processes: DATASET_PATHWAYS.map((p) => ({
+    id: p.process_id,
+    name: p.receiver_industry,
+    material_ids: [p.material_id],
+  })),
 };
 
 // Commercial values below are DEMO INPUTS, not dataset prices. The real UI asks
@@ -124,39 +126,26 @@ let listings: OwnListing[] = [
   },
 ];
 
-let requirements: OwnRequirement[] = [
-  {
-    id: "req_001",
-    buyer: ME,
-    material_id: "rice_husk",
-    receiving_process_id: "brick_kiln_fuel",
-    quantity_kg: 2000,
-    max_moisture_pct: 15,
-    delivery_window: { start: inHours(48), end: inHours(120) },
-    buyer_max_total_paise: 700000,
-    location: ME.location,
-    status: "open",
-  },
-];
+let requirements: OwnRequirement[] = [];
 
 let transportOptions: TransportOption[] = [
   {
     id: "trn_001", listing_id: "lst_001", requirement_id: "req_001",
-    label: "Local carrier — demo configured estimate", freight_paise: 30000,
+    label: "Configured freight estimate", freight_paise: 61000,
     capacity_kg: 4000, pickup_at: inHours(30), delivery_at: inHours(36), expires_at: inHours(96),
-    source: "configured_estimate", distance_m: 0, distance_basis: "district_straight_line",
+    source: "configured_estimate", distance_m: 60740, distance_basis: "district_straight_line",
   },
   {
     id: "trn_002", listing_id: "lst_002", requirement_id: "req_001",
-    label: "District carrier — demo configured estimate", freight_paise: 52000,
+    label: "Configured freight estimate", freight_paise: 52000,
     capacity_kg: 4000, pickup_at: inHours(24), delivery_at: inHours(36), expires_at: inHours(84),
-    source: "configured_estimate", distance_m: 46310, distance_basis: "district_straight_line",
+    source: "configured_estimate", distance_m: 28000, distance_basis: "district_straight_line",
   },
   {
     id: "trn_003", listing_id: "lst_003", requirement_id: "req_001",
-    label: "District carrier — demo configured estimate", freight_paise: 61000,
+    label: "Configured freight estimate", freight_paise: 30000,
     capacity_kg: 4000, pickup_at: inHours(20), delivery_at: inHours(34), expires_at: inHours(72),
-    source: "configured_estimate", distance_m: 60740, distance_basis: "district_straight_line",
+    source: "configured_estimate", distance_m: 0, distance_basis: "district_straight_line",
   },
 ];
 

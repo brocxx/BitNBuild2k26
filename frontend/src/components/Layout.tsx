@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { API_MODE } from "../api";
+import { api } from "../api";
+import type { Business } from "../api";
 import { useAuth } from "../auth/AuthContext";
 
 const NAV = [
@@ -11,7 +12,8 @@ const NAV = [
 ];
 
 export function Layout() {
-  const { session, signOut } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
+  const [business, setBusiness] = useState<Business | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const saved = localStorage.getItem("kib-theme");
     if (saved === "light" || saved === "dark") return saved;
@@ -22,6 +24,18 @@ export function Layout() {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("kib-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.getMe()
+      .then((me) => { if (!cancelled && me?.business) setBusiness(me.business); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [isAuthenticated]);
+
+  const initials = business?.name
+    ? business.name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()
+    : "KB";
 
   return (
     <div className="app-shell">
@@ -35,41 +49,29 @@ export function Layout() {
 
         <nav className="sidebar-nav">
           {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => `side-link${isActive ? " side-link--active" : ""}`}
-            >
-              <span className="side-link__icon">{item.icon}</span>
-              <span>{item.label}</span>
+            <NavLink key={item.to} to={item.to} end={item.end}
+              className={({ isActive }) => `side-link${isActive ? " side-link--active" : ""}`}>
+              <span className="side-link__icon">{item.icon}</span><span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
         <div className="sidebar-spacer" />
-        {API_MODE !== "real" && <div className="demo-pill">● DEMO DATA</div>}
-        <button className="theme-toggle" onClick={() => setTheme(theme === "light" ? "dark" : "light")}> 
+        <button className="theme-toggle" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
           <span>{theme === "light" ? "☾" : "☀"}</span>
           <span>{theme === "light" ? "Dark mode" : "Light mode"}</span>
         </button>
         <div className="enterprise-chip">
-          <div className="avatar">KB</div>
-          <div><strong>KA-ENT-000179</strong><span>Kolar · Brick manufacturing</span></div>
+          <div className="avatar">{initials}</div>
+          <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+            <strong>{business?.name || "Your enterprise"}</strong>
+            <span>{business ? `${business.location.district} · ${business.enterprise_id || business.roles.join(" / ")}` : "Karnataka"}</span>
+          </div>
         </div>
-        {session && <button className="button button--ghost button--full" onClick={() => signOut()}>Sign out</button>}
+        {isAuthenticated && <button className="button button--ghost button--full" onClick={() => signOut()}>Sign out</button>}
       </aside>
 
       <main className="workspace">
-        <header className="topbar">
-          <div>
-            <span className="eyebrow">Circular Supply Network · Karnataka</span>
-          </div>
-          <div className="topbar-actions">
-            <span className="evidence-tag">Dataset-backed</span>
-            <span className="agent-status"><i /> 3 agents ready</span>
-          </div>
-        </header>
         <div className="page-wrap"><Outlet /></div>
       </main>
     </div>
