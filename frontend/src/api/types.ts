@@ -13,6 +13,8 @@ export type Location = {
 
 export type Role = "buyer" | "seller";
 
+export type NegotiationStrategy = "conceder" | "boulware";
+
 export type Business = {
   id: string;
   name: string;
@@ -35,6 +37,7 @@ export type Listing = {
   pickup_window: Window;
   location: Location;
   status: ListingStatus;
+  negotiation_strategy: NegotiationStrategy;
 };
 
 export type OwnListing = Listing & { seller_floor_paise_per_tonne: number };
@@ -51,6 +54,7 @@ export type Requirement = {
   delivery_window: Window;
   location: Location;
   status: RequirementStatus;
+  negotiation_strategy: NegotiationStrategy;
 };
 
 export type OwnRequirement = Requirement & { buyer_max_total_paise: number };
@@ -119,6 +123,7 @@ export type Offer = {
   responds_to_offer_id: string | null;
   explanation: string;
   expires_at: string;
+  chain_hash?: string | null;
 };
 
 export type FailureCode =
@@ -129,7 +134,9 @@ export type FailureCode =
   | "ROUND_LIMIT"
   | "PROVIDER_UNAVAILABLE"
   | "INVALID_MODEL_OUTPUT"
-  | "INTERRUPTED";
+  | "INTERRUPTED"
+  | "ZOPA_IMPOSSIBLE";
+
 
 export type Negotiation = {
   id: string;
@@ -164,6 +171,36 @@ export type Event = {
 
 export type DealStatus = "agreed" | "pickup_scheduled" | "collected" | "delivered" | "cancelled";
 
+export type ESGMetrics = {
+  material_id: string;
+  material_display_name: string;
+  replaces_virgin: string;
+  quantity_kg: number;
+  distance_km: number;
+  gross_co2e_avoided_kg: number;
+  transport_co2e_kg: number;
+  net_co2e_avoided_kg: number;
+  landfill_diverted_kg: number;
+  carbon_credits_estimated: number;
+  emission_factor_source: string;
+};
+
+export type GreenCertificate = {
+  certificate_id: string;
+  issuer: string;
+  deal_id: string;
+  trade_date: string;
+  seller: Business;
+  buyer: Business;
+  material_id: string;
+  material_display_name: string;
+  quantity_kg: number;
+  transport_distance_km: number;
+  esg_metrics: ESGMetrics;
+  verification_hash: string;
+  methodology: string;
+};
+
 export type Deal = {
   id: string;
   negotiation_id: string;
@@ -179,7 +216,9 @@ export type Deal = {
   transport_option: TransportOption;
   status: DealStatus;
   created_at: string;
+  esg_metrics?: ESGMetrics;
 };
+
 
 export type Paginated<T> = { items: T[]; next_cursor: string | null };
 
@@ -217,4 +256,30 @@ export type NegotiationSummary = {
   status: NegotiationStatus;
   created_at: string;
   deal_id: string | null;
+};
+
+export type MapEnterprise = {
+  enterprise_id: string;
+  name: string;
+  district: string;
+  lat: number;
+  lon: number;
+  sector: string;
+  byproducts: string[];
+};
+
+export type SymbiosisOrigin = {
+  district: string;
+  lat: number;
+  lon: number;
+};
+
+export type SymbiosisResult = {
+  origin: SymbiosisOrigin;
+  radius_km: number;
+  compatible_enterprises: MapEnterprise[];
+};
+
+export type MapEnterprisesResponse = {
+  enterprises: MapEnterprise[];
 };

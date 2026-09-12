@@ -57,6 +57,7 @@ def to_listing(listing: models.Listing) -> schemas.Listing:
             listing.district, listing.lat, listing.lon, listing.location_precision
         ),
         status=listing.status,  # type: ignore[arg-type]
+        negotiation_strategy=listing.negotiation_strategy,  # type: ignore[arg-type]
     )
 
 
@@ -85,6 +86,7 @@ def to_requirement(requirement: models.Requirement) -> schemas.Requirement:
             requirement.location_precision,
         ),
         status=requirement.status,  # type: ignore[arg-type]
+        negotiation_strategy=requirement.negotiation_strategy,  # type: ignore[arg-type]
     )
 
 
@@ -136,6 +138,7 @@ def to_offer(offer: models.Offer) -> schemas.Offer:
         responds_to_offer_id=offer.responds_to_offer_id,
         explanation=offer.explanation,
         expires_at=offer.expires_at,
+        chain_hash=offer.chain_hash,
     )
 
 
@@ -150,12 +153,30 @@ def to_event(event: models.NegotiationEvent) -> schemas.Event:
     )
 
 
+from app.services.esg import compute_esg
+
+
 def to_deal(
     deal: models.Deal,
     seller: models.Business,
     buyer: models.Business,
     transport: models.TransportOption,
 ) -> schemas.Deal:
+    distance_km = (transport.distance_m / 1000.0) if transport.distance_m else 120.0
+    esg = compute_esg(deal.material_id, float(deal.quantity_kg), distance_km)
+    esg_schema = schemas.ESGMetrics(
+        material_id=esg.material_id,
+        material_display_name=esg.material_display_name,
+        replaces_virgin=esg.replaces_virgin,
+        quantity_kg=esg.quantity_kg,
+        distance_km=esg.distance_km,
+        gross_co2e_avoided_kg=esg.gross_co2e_avoided_kg,
+        transport_co2e_kg=esg.transport_co2e_kg,
+        net_co2e_avoided_kg=esg.net_co2e_avoided_kg,
+        landfill_diverted_kg=esg.landfill_diverted_kg,
+        carbon_credits_estimated=esg.carbon_credits_estimated,
+        emission_factor_source=esg.emission_factor_source,
+    )
     return schemas.Deal(
         id=deal.id,
         negotiation_id=deal.negotiation_id,
@@ -171,6 +192,7 @@ def to_deal(
         transport_option=to_transport_option(transport),
         status=deal.status,  # type: ignore[arg-type]
         created_at=deal.created_at,
+        esg_metrics=esg_schema,
     )
 
 

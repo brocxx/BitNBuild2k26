@@ -24,11 +24,26 @@ Switching modes never requires touching a page component — both implementation
 ```text
 src/api/        types.ts (contract mirror), ApiClient.ts (interface), mock.ts, client.ts, index.ts
 src/auth/       Supabase wrapper + React auth context
-src/pages/      one file per screen: Login, Dashboard, Listings, Requirements, Matches, NegotiationDetail, DealDetail
-src/components/ Layout (nav + mock banner), StatusBadge, CostBreakdown
-src/utils/      paise/kg/meter → display formatting
+src/pages/      Login, Dashboard, Listings, Requirements, Matches, NegotiationDetail, DealDetail, SymbiosisMap, ESGCertificate, OpportunityLab
+src/components/ Layout (nav + theme toggle), StatusBadge, CostBreakdown, NegotiationStrategySelector
+src/utils/      format.ts, mapUtils.ts
 src/styles/     global.css
 ```
+
+## Phase 2 Features Built
+
+1. **Geospatial Symbiosis Map (`/map`)**:
+   - Leaflet interactive map with **7,933 real UDYAM enterprises** categorized by NIC sector.
+   - Proximity search: **"Find Compatible Buyers within 150 km"** draws symbiosis pathways.
+   - Animated trade corridors for active agreed deals across Karnataka.
+2. **Digital Green Certificate (`/deals/:dealId/certificate`)**:
+   - Official ESG Certificate verifying **net $\text{CO}_2\text{e}$ avoided**, **landfill diverted**, and **carbon credits ($\text{tCO}_2\text{e}$)**.
+   - Verifiable **SHA-256 audit fingerprint**.
+   - Clean printable PDF layout with `@media print` styling (`window.print()`).
+3. **Negotiation Strategy Selector**:
+   - Toggle buttons (`🤝 Cooperative (Conceder)` vs `💪 Aggressive (Boulware)`) on Create Listing and Create Requirement forms.
+4. **Cryptographic Audit Trail Display**:
+   - Offer cards in `NegotiationDetail` display immutable `🔒 SHA-256 Hash` chains and ZOPA active badges.
 
 ## Commands
 
@@ -39,9 +54,3 @@ npm run build      # production build to dist/
 npm run preview    # preview the production build
 ```
 
-## Notes for integration with the backend (A)
-
-- Compare `contracts/openapi.json` against `src/api/types.ts` as soon as it's exported — freeze field names/units/enums before building further screens on top.
-- `POST /negotiations` requires an `Idempotency-Key` header; `client.ts` already threads this through `startNegotiation`.
-- Private fields (`seller_floor_paise_per_tonne`, `buyer_max_total_paise`) only ever appear in `Own*` types returned from `/me/listings` and `/me/requirements` — never render them on a screen the counterparty could see.
-- Negotiation and deal screens poll every 2s (`POLL_MS` in `NegotiationDetail.tsx`) and stop on any terminal status (`agreed`, `no_deal`, `failed`).

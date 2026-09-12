@@ -10,6 +10,8 @@ import {
   getMaterialName,
   getPathwayByProcessId,
 } from "../data/datasetReference";
+import { NegotiationStrategySelector } from "../components/NegotiationStrategySelector";
+import type { NegotiationStrategy } from "../api";
 
 const EMPTY_FORM = {
   material_id: "",
@@ -26,6 +28,7 @@ export function Requirements() {
   const [requirements, setRequirements] = useState<OwnRequirement[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [strategy, setStrategy] = useState<NegotiationStrategy>("conceder");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,8 +71,10 @@ export function Requirements() {
         delivery_window: { start: form.delivery_start, end: form.delivery_end },
         buyer_max_total_paise: Math.round(Number(form.buyer_max_total_rupees) * 100),
         location: me.business.location,
+        negotiation_strategy: strategy,
       });
       setForm(EMPTY_FORM);
+      setStrategy("conceder");
       await refresh();
       navigate(`/requirements/${created.id}/matches`);
     } catch (err) {
@@ -142,6 +147,7 @@ export function Requirements() {
               <input type="number" min={0} step="1" required value={form.buyer_max_total_rupees} onChange={(e) => setForm({ ...form, buyer_max_total_rupees: e.target.value })} placeholder="e.g. 7000" />
               <small>Your buyer agent uses this limit; sellers never see it.</small>
             </label>
+            <NegotiationStrategySelector value={strategy} onChange={setStrategy} />
             <div className="field-row">
               <label>Delivery start<input type="datetime-local" required value={form.delivery_start} onChange={(e) => setForm({ ...form, delivery_start: e.target.value })} /></label>
               <label>Delivery end<input type="datetime-local" required value={form.delivery_end} onChange={(e) => setForm({ ...form, delivery_end: e.target.value })} /></label>

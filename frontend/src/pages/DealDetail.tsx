@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import type { Deal, DealStatus } from "../api";
 import { StatusBadge } from "../components/StatusBadge";
@@ -14,6 +14,7 @@ const NEXT_STATUS: Partial<Record<DealStatus, DealStatus>> = {
 
 export function DealDetail() {
   const { dealId } = useParams<{ dealId: string }>();
+  const navigate = useNavigate();
   const [deal, setDeal] = useState<Deal | null>(null);
   const [updating, setUpdating] = useState(false);
 
@@ -67,6 +68,7 @@ export function DealDetail() {
 
   const next = NEXT_STATUS[deal.status];
   const canCancel = deal.status === "agreed" || deal.status === "pickup_scheduled";
+  const esg = deal.esg_metrics;
 
   return (
     <div className="panel">
@@ -99,10 +101,48 @@ export function DealDetail() {
         </div>
       </div>
 
+      {esg && (
+        <div style={{ background: "#e8f8f0", border: "1px solid #a3e4d7", borderRadius: "8px", padding: "1.2rem", margin: "1.5rem 0" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+            <h3 style={{ margin: 0, color: "#16a085", fontSize: "1.05rem" }}>🌿 Verified ESG Impact</h3>
+            <span style={{ fontSize: "0.8rem", background: "#27ae60", color: "#fff", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>
+              IPCC 2006 Standard
+            </span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginTop: "0.75rem" }}>
+            <div>
+              <div style={{ fontSize: "0.8rem", color: "#7f8c8d" }}>Net CO₂e Saved</div>
+              <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#27ae60" }}>
+                {(esg.net_co2e_avoided_kg / 1000).toFixed(2)} tonnes
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.8rem", color: "#7f8c8d" }}>Landfill Diverted</div>
+              <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#2980b9" }}>
+                {(esg.landfill_diverted_kg / 1000).toFixed(2)} tonnes
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.8rem", color: "#7f8c8d" }}>Carbon Credits</div>
+              <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#b7950b" }}>
+                {esg.carbon_credits_estimated.toFixed(3)} tCO₂e
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h3>Cost</h3>
       <CostBreakdown costs={deal.costs} />
 
-      <div className="deal-actions">
+      <div className="deal-actions" style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "1.5rem" }}>
+        <button
+          className="button button--primary"
+          style={{ background: "#27ae60", borderColor: "#27ae60" }}
+          onClick={() => navigate(`/deals/${deal.id}/certificate`)}
+        >
+          🌿 View Digital Green Certificate →
+        </button>
         {next && (
           <button className="button button--primary" onClick={advance} disabled={updating}>
             Mark {next.replace(/_/g, " ")}
@@ -120,3 +160,4 @@ export function DealDetail() {
     </div>
   );
 }
+

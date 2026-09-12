@@ -158,7 +158,18 @@ def build_brief(context: AgentContext) -> str:
             }
             for offer in context.history
         ],
+        # --- Game theory signals (pre-computed by the coordinator) ---
+        "negotiation_strategy": context.strategy,
+        "zopa_exists": context.zopa_exists,
     }
+
+    # The concession target tells the agent exactly where the curve says it
+    # should be this round.  It is a recommended position, not a hard rule —
+    # the agent may go further toward its limit, but should not go backwards.
+    if context.concession_target_paise_per_tonne is not None:
+        brief["concession_target_this_round_paise_per_tonne"] = (
+            context.concession_target_paise_per_tonne
+        )
 
     # Whether the opponent's standing offer is acceptable is a comparison, not
     # a judgement call, so code decides it and the model is simply told. Left
@@ -207,5 +218,17 @@ def build_brief(context: AgentContext) -> str:
             brief["you_may_accept_the_standing_price"] = (
                 standing.unit_price_paise_per_tonne <= ceiling
             )
+        # BATNA: if a cheaper alternative seller exists, tell the buyer agent.
+        # It can cite this as real leverage without fabricating a number.
+        if context.batna_price_paise_per_tonne is not None:
+            brief["batna_alternative_seller"] = {
+                "asking_price_paise_per_tonne": context.batna_price_paise_per_tonne,
+                "district": context.batna_district,
+                "note": (
+                    "You have an alternative seller at this price. You may use "
+                    "this as leverage, but do not fabricate a lower number."
+                ),
+            }
 
     return json.dumps(brief, indent=2, sort_keys=True)
+

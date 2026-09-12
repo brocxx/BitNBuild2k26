@@ -60,6 +60,14 @@ function query(params: Record<string, string | number | null | undefined>): stri
   return "?" + new URLSearchParams(usable.map(([k, v]) => [k, String(v)])).toString();
 }
 
+const NIC_BYPRODUCTS: Record<number, string[]> = {
+  10: ["rice_husk", "rice_bran"],
+  13: ["fabric_cutting_waste", "silk_noil_reeling_waste"],
+  16: ["sawdust", "wood_bark", "wood_offcuts"],
+  23: ["broken_rejected_bricks_grog", "kiln_fly_ash"],
+  25: ["sheet_metal_scrap", "machining_swarf", "mill_scale"],
+};
+
 export const realClient: ApiClient = {
   getMe: () => request("/me"),
   getReference: () => request("/reference"),
@@ -93,6 +101,57 @@ export const realClient: ApiClient = {
   getDeal: (id) => request(`/deals/${id}`),
   updateDealStatus: (id, status: DealStatus) =>
     request(`/deals/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
+  getDealCertificate: (id) => request(`/deals/${id}/certificate`),
+
+
+  getMapEnterprises: async () => {
+    const res = await request<{ items?: any[]; enterprises?: any[] }>("/map/enterprises?limit=8000");
+    const rawList = res.enterprises ?? res.items ?? [];
+    return {
+      enterprises: rawList.map((item) => ({
+        enterprise_id: item.enterprise_id,
+        name: item.enterprise_name || item.name || `Enterprise ${item.enterprise_id}`,
+        district: item.district,
+        lat: item.lat,
+        lon: item.lon,
+        sector: item.sector || `NIC ${item.nic2_division}`,
+        byproducts: item.byproducts || NIC_BYPRODUCTS[item.nic2_division] || [],
+      })),
+    };
+  },
+
+  getSymbiosisNeighbors: async (district: string, radiusKm = 150) => {
+    const res = await request<{
+      origin?: any;
+      query_district?: string;
+      radius_km?: number;
+      compatible_enterprises?: any[];
+      matches?: any[];
+    }>(`/map/symbiosis${query({ district, radius_km: radiusKm, limit: 100 })}`);
+
+    if (res.compatible_enterprises) {
+      return res as any;
+    }
+
+    const matches = res.matches ?? [];
+    return {
+      origin: res.origin || { district, lat: 14.4644, lon: 75.9218 },
+      radius_km: radiusKm,
+      compatible_enterprises: matches.map((m) => {
+        const ent = m.enterprise;
+        return {
+          enterprise_id: ent.enterprise_id,
+          name: ent.enterprise_name || ent.name,
+          district: ent.district,
+          lat: ent.lat,
+          lon: ent.lon,
+          sector: ent.sector || `NIC ${ent.nic2_division}`,
+          byproducts: [m.byproduct_name],
+        };
+      }),
+    };
+  },
 };
+
 
 export { ApiRequestError };

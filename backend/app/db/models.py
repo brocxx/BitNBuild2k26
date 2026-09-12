@@ -283,6 +283,10 @@ class Listing(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(String(16), default="open", index=True)
     # Bumped on every mutation; the commit step rechecks it before reserving.
     version: Mapped[int] = mapped_column(Integer, default=1)
+    # Game theory: concession curve strategy for this listing's seller agent.
+    # "conceder" = linear walk to floor (cooperative, quick deal)
+    # "boulware" = hold near asking until final round, sharp drop at deadline
+    negotiation_strategy: Mapped[str] = mapped_column(String(16), default="conceder")
 
     seller: Mapped[Business] = relationship(lazy="joined")
 
@@ -312,6 +316,8 @@ class Requirement(Base, TimestampMixin):
 
     status: Mapped[str] = mapped_column(String(16), default="open", index=True)
     version: Mapped[int] = mapped_column(Integer, default=1)
+    # Game theory: concession curve strategy for this requirement's buyer agent.
+    negotiation_strategy: Mapped[str] = mapped_column(String(16), default="conceder")
 
     buyer: Mapped[Business] = relationship(lazy="joined")
 
@@ -415,6 +421,9 @@ class Offer(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     round: Mapped[int] = mapped_column(Integer, default=0)
+    # SHA-256 hash of this offer chained with the previous offer's hash.
+    # Forms a tamper-evident audit log for the entire negotiation.
+    chain_hash: Mapped[str] = mapped_column(String(64), default="")
 
 
 class NegotiationEvent(Base):

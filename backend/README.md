@@ -298,27 +298,19 @@ client and mocks. Prefer additive changes now that the first checkpoint is done.
 
 ---
 
-## What is left
+## Phase 2 Upgrades (Game Theory, ESG, SHA-256 & Geospatial Map)
 
-Nothing blocking. Remaining items are integration and polish:
+| Module | Purpose | Endpoints / Exports |
+|---|---|---|
+| **ZOPA Engine** (`app/services/zopa.py`) | Pure mathematical zone of agreement & concession curve calculations | `compute_zopa()`, `concession_target()`, `extract_batna()` |
+| **Strategy Field** (`models.Listing`, `models.Requirement`) | Enables "conceder" vs "boulware" concession personalities | `POST /listings`, `POST /requirements` |
+| **SHA-256 Audit Trail** (`coordinator.py`, `models.Offer`) | Chained SHA-256 hashes per offer for immutable negotiation history | `Offer.chain_hash`, returned in `GET /negotiations/{id}` |
+| **ESG Carbon Engine** (`app/services/esg.py`) | IPCC 2006 peer-reviewed carbon savings & circularity metrics | `compute_esg()`, `GET /deals/{id}/certificate` |
+| **Geospatial Symbiosis** (`app/services/map_service.py`, `app/api/routes/map.py`) | In-memory indexing of 7,933 real MSMEs & proximity symbiosis matching | `GET /map/enterprises`, `GET /map/symbiosis`, `GET /map/stats` |
 
-1. **Frontend integration.** B builds against `contracts/openapi.json`.
-   Expect small additive contract requests once real screens exist; those go
-   through A, get re-exported, and are announced to B.
-2. **Deployment.** No Render configuration yet. Local runs are the supported
-   path, and the plan treats hosting as optional.
-3. **Optional:** openrouteservice road distances to replace the straight-line
-   district figures shown as context on match and deal screens.
+---
 
-### Known limitations, stated plainly
+## Known limitations, stated plainly
 
-- **Gemini free-tier quota** caps realistic use at roughly 18 full negotiations
-  per day. See above.
-- **A buyer bidding its exact ceiling** makes the delivered total equal its
-  budget, which an attentive seller could infer from. The prompt tells the
-  buyer to stay below the ceiling until the final round, but this is mitigation,
-  not a guarantee — it is inherent to any negotiation where a party bids its
-  maximum.
-- **Flash-Lite is a small model.** It has held the JSON schema on every live
-  run so far, but `INVALID_MODEL_OUTPUT` handling and bounded retries exist
-  because that is not guaranteed.
+- **Gemini free-tier quota** caps realistic use at roughly 18 full negotiations per day. Pacing and retries are built in.
+- **Flash-Lite / Flash 2.5 structured output** is enforced with Pydantic JSON schemas and hard server-side coordinator validation.

@@ -8,6 +8,8 @@ import { Matches } from "./pages/Matches";
 import { NegotiationDetail } from "./pages/NegotiationDetail";
 import { DealDetail } from "./pages/DealDetail";
 import { OpportunityLab } from "./pages/OpportunityLab";
+import { SymbiosisMap } from "./pages/SymbiosisMap";
+import { ESGCertificate } from "./pages/ESGCertificate";
 import { useAuth } from "./auth/AuthContext";
 import { API_MODE } from "./api";
 
@@ -34,11 +36,14 @@ export default function App() {
         <Route path="/listings" element={<Listings />} />
         <Route path="/requirements" element={<Requirements />} />
         <Route path="/opportunities" element={<OpportunityLab />} />
+        <Route path="/map" element={<SymbiosisMap />} />
         <Route path="/requirements/:requirementId/matches" element={<Matches />} />
         <Route path="/negotiations/:negotiationId" element={<NegotiationDetail />} />
         <Route path="/deals/:dealId" element={<DealDetail />} />
+        <Route path="/deals/:dealId/certificate" element={<ESGCertificate />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
+

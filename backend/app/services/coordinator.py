@@ -17,6 +17,8 @@ produce an agreement, and they are never replaced with a simulated one.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -39,8 +41,9 @@ from app.config import Settings, get_settings
 from app.db import models
 from app.db.session import session_scope
 from app.services import matching
-from app.services.costing import compute_costs
+from app.services.costing import compute_costs, max_unit_price_within_budget
 from app.services.reservations import ReservationFailed, commit_deal
+from app.services.zopa import BATNAResult, ZOPAResult, compute_zopa, concession_target, extract_batna
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +60,8 @@ ROUND_LIMIT = "ROUND_LIMIT"
 PROVIDER_UNAVAILABLE = "PROVIDER_UNAVAILABLE"
 INVALID_MODEL_OUTPUT = "INVALID_MODEL_OUTPUT"
 INTERRUPTED = "INTERRUPTED"
+# No mathematical overlap between seller floor and buyer ceiling.
+ZOPA_IMPOSSIBLE = "ZOPA_IMPOSSIBLE"
 
 # How an exclusion found at negotiation time maps onto a negotiation outcome.
 _REASON_TO_FAILURE = {
@@ -224,6 +229,77 @@ class Coordinator:
 
         negotiation.current_listing_id = listing.id
 
+        # ------------------------------------------------------------------
+        # Pre-compute game-theory context before any LLM calls.
+        # ------------------------------------------------------------------
+
+        # Determine strategy: the seller's setting drives their agent;
+        # the buyer's setting drives their agent.
+        seller_strategy = listing.negotiation_strategy
+        buyer_strategy = requirement.negotiation_strategy
+
+        # BATNA: build the candidate list for extract_batna.
+        all_candidates = list(
+            self.db.scalars(
+                select(models.NegotiationCandidate)
+                .where(models.NegotiationCandidate.negotiation_id == negotiation.id)
+                .order_by(models.NegotiationCandidate.order_index)
+            )
+        )
+        # Load asking prices and districts for all candidates so extract_batna
+        # can find the cheapest alternative.
+        candidate_tuples: list[tuple[str, int, str]] = []
+        for c in all_candidates:
+            c_listing = self.db.get(models.Listing, c.listing_id)
+            if c_listing is not None:
+                candidate_tuples.append(
+                    (c_listing.id, c_listing.asking_price_paise_per_tonne, c_listing.district)
+                )
+        batna = extract_batna(listing.id, candidate_tuples)
+
+        # ZOPA: use the first usable transport's freight to compute buyer ceiling.
+        # (transport var is bound later; use evaluation directly here.)
+        _zopa_transport = evaluation.usable_transport[0]
+        buyer_ceiling = max_unit_price_within_budget(
+            requirement.buyer_max_total_paise,
+            _zopa_transport.freight_paise,
+            requirement.quantity_kg,
+        )
+        zopa = compute_zopa(
+            seller_floor_paise_per_tonne=listing.seller_floor_paise_per_tonne,
+            buyer_ceiling_paise_per_tonne=buyer_ceiling,
+        )
+
+        # Emit ZOPA result as a system event so the UI can show it without leaking private limits.
+        if zopa.exists:
+            self.emit(
+                negotiation,
+                "started",
+                "system",
+                "ZOPA verified: feasible negotiation zone exists. "
+                f"Strategies: seller {seller_strategy}, buyer {buyer_strategy}.",
+                listing_id=listing.id,
+            )
+        else:
+            # No overlap — skip all LLM calls and fail immediately.
+            self.emit(
+                negotiation,
+                "candidate_rejected",
+                "system",
+                "ZOPA impossible: seller floor exceeds buyer budget ceiling. "
+                "No price exists that satisfies both parties. Skipping rounds.",
+                listing_id=listing.id,
+            )
+            return self._reject_candidate(
+                negotiation,
+                candidate,
+                BUDGET_NOT_MET,
+                "No price satisfies both the seller floor and buyer budget on this route.",
+                evaluation.pathway_use,
+            )
+
+        # ------------------------------------------------------------------
+
         transport = evaluation.usable_transport[0]
         transport_view = TransportView(
             transport_option_id=transport.id,
@@ -270,6 +346,10 @@ class Coordinator:
                     evaluation,
                     round_number,
                     history,
+                    seller_strategy=seller_strategy,
+                    buyer_strategy=buyer_strategy,
+                    zopa=zopa,
+                    batna=batna,
                 )
                 decision = self._ask(role, context, allowed_option_ids, listing)
 
@@ -407,7 +487,41 @@ class Coordinator:
         evaluation: matching.CandidateEvaluation,
         round_number: int,
         history: list[OfferView],
+        seller_strategy: str = "conceder",
+        buyer_strategy: str = "conceder",
+        zopa: ZOPAResult | None = None,
+        batna: BATNAResult | None = None,
     ) -> AgentContext:
+        strategy = seller_strategy if role == "seller" else buyer_strategy
+
+        # Pre-compute the concession curve target for this role + round.
+        if role == "seller" and listing.seller_floor_paise_per_tonne is not None:
+            target = concession_target(
+                strategy=strategy,
+                round_number=round_number,
+                max_rounds=negotiation.max_rounds,
+                start=listing.asking_price_paise_per_tonne,
+                limit=listing.seller_floor_paise_per_tonne,
+                max_share=0.80,
+            )
+        elif role == "buyer" and requirement.buyer_max_total_paise is not None:
+            ceiling = max_unit_price_within_budget(
+                requirement.buyer_max_total_paise,
+                transport.freight_paise,
+                requirement.quantity_kg,
+            )
+            opening = int(ceiling * 0.72)
+            target = concession_target(
+                strategy=strategy,
+                round_number=round_number,
+                max_rounds=negotiation.max_rounds,
+                start=opening,
+                limit=ceiling,
+                max_share=0.85,
+            )
+        else:
+            target = None
+
         return AgentContext(
             role=role,  # type: ignore[arg-type]
             round_number=round_number,
@@ -426,6 +540,25 @@ class Coordinator:
             ),
             buyer_max_total_paise=(
                 requirement.buyer_max_total_paise if role == "buyer" else None
+            ),
+            # Game theory fields
+            strategy=strategy,
+            concession_target_paise_per_tonne=target,
+            zopa_exists=zopa.exists if zopa else None,
+            batna_price_paise_per_tonne=(
+                batna.best_competitor_asking_paise_per_tonne
+                if role == "buyer" and batna and batna.exists
+                else None
+            ),
+            batna_district=(
+                batna.best_competitor_district
+                if role == "buyer" and batna and batna.exists
+                else None
+            ),
+            batna_listing_id=(
+                batna.best_competitor_listing_id
+                if role == "buyer" and batna and batna.exists
+                else None
             ),
         )
 
@@ -476,6 +609,19 @@ class Coordinator:
         round_number: int,
     ) -> models.Offer:
         costs = compute_costs(unit_price, requirement.quantity_kg, transport.freight_paise)
+        now = datetime.now(timezone.utc)
+
+        # SHA-256 audit chain: each offer hashes its data + the previous hash.
+        # This makes the negotiation history tamper-evident: modifying any
+        # past offer breaks every subsequent hash.
+        prev_offers = self.db.scalars(
+            select(models.Offer)
+            .where(models.Offer.negotiation_id == negotiation.id)
+            .order_by(models.Offer.created_at.desc())
+            .limit(1)
+        ).first()
+        prev_hash = prev_offers.chain_hash if prev_offers else "GENESIS"
+
         offer = models.Offer(
             negotiation_id=negotiation.id,
             listing_id=listing.id,
@@ -492,9 +638,25 @@ class Coordinator:
             action=action,
             responds_to_offer_id=responds_to,
             explanation=scrub_explanation(explanation, private_values),
-            expires_at=datetime.now(timezone.utc) + OFFER_VALIDITY,
+            expires_at=now + OFFER_VALIDITY,
             round=round_number,
         )
+
+        # Compute chain hash over deterministic payload.
+        chain_payload = json.dumps(
+            {
+                "negotiation_id": negotiation.id,
+                "round": round_number,
+                "author": author,
+                "action": action,
+                "unit_price_paise_per_tonne": unit_price,
+                "buyer_total_paise": costs.buyer_total_paise,
+                "timestamp_utc": now.isoformat(),
+                "prev_hash": prev_hash,
+            },
+            sort_keys=True,
+        )
+        offer.chain_hash = hashlib.sha256(chain_payload.encode()).hexdigest()
         self.db.add(offer)
         self.db.flush()
         return offer
