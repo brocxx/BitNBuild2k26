@@ -12,10 +12,10 @@ import { useAuth } from "./auth/AuthContext";
 import { API_MODE } from "./api";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
-  const { loading, session } = useAuth();
+  const { loading, isAuthenticated } = useAuth();
   if (API_MODE !== "real") return children; // mock mode skips real auth entirely
   if (loading) return <p className="loading">Loading…</p>;
-  if (!session) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 }
 
