@@ -49,10 +49,49 @@ def run_seed() -> None:
     logger.info("\n--- demo seed ---\n%s", report.summary())
 
 
+DESTRUCTIVE = {"import", "seed", "reset"}
+
+
+def confirm_shared_database(command: str, assume_yes: bool) -> bool:
+    """Guard the shared team database against a careless reseed.
+
+    `seed` wipes every operational table and `import` rebuilds the reference
+    tables. Doing that against DB_TARGET=supabase destroys whatever the rest
+    of the team is working against, including mid-demo. Local SQLite is the
+    caller's own file, so it is never gated.
+    """
+    from app.config import get_settings
+
+    settings = get_settings()
+    if settings.db_target != "supabase" or command not in DESTRUCTIVE or assume_yes:
+        return True
+
+    logger.warning(
+        "\n'%s' will DESTROY data in the SHARED Supabase database, not a local "
+        "file.\nAnyone else using it right now loses their state.\n",
+        command,
+    )
+    try:
+        answer = input("Type 'yes' to continue: ").strip().lower()
+    except EOFError:
+        # Non-interactive (CI, a piped shell): refuse rather than assume.
+        logger.error("Refusing: not interactive. Pass --yes if this is intended.")
+        return False
+    return answer == "yes"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="app.data.cli")
     parser.add_argument("command", choices=["migrate", "import", "seed", "reset"])
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="skip the confirmation prompt when targeting the shared database",
+    )
     args = parser.parse_args(argv)
+
+    if not confirm_shared_database(args.command, args.yes):
+        return 1
 
     if args.command in ("migrate", "reset"):
         migrate()
