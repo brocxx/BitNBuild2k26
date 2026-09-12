@@ -4,6 +4,7 @@ import { api } from "../api";
 import type { Business, Deal, NegotiationSummary, OwnListing, OwnRequirement } from "../api";
 import { StatusBadge } from "../components/StatusBadge";
 import { kgToTonnes, paisePerTonneToRupees, formatDateTime } from "../utils/format";
+import { getMaterialName, getPathwayByProcessId } from "../data/datasetReference";
 
 export function Dashboard() {
   const [business, setBusiness] = useState<Business | null>(null);
@@ -61,18 +62,17 @@ export function Dashboard() {
   }
 
   const locationDisplay = business?.location.district || "Karnataka";
+  const activePathway = firstOpenReq ? getPathwayByProcessId(firstOpenReq.receiving_process_id) : undefined;
 
   return (
     <div className="page-stack dashboard">
       <section className="hero-card">
         <div className="hero-copy">
           <span className="eyebrow">Circular material intelligence</span>
-          <h1>
-            Good evening, <span className="script-accent">{locationDisplay}</span>
-          </h1>
+          <h1>Good evening</h1>
           <p>
-            Turn industrial byproducts into dependable supply. Discover nearby compatible sellers, understand
-            barriers, and let agents negotiate within private limits.
+            {business?.name ? `${business.name} · ${locationDisplay}. ` : ""}Turn industrial byproducts into dependable supply.
+            Create a requirement first, then compare only the suppliers compatible with that material and receiving pathway.
           </p>
           <div className="hero-actions">
             <Link className="button button--primary" to="/listings">
@@ -120,7 +120,7 @@ export function Dashboard() {
         <article className="metric-card metric-card--accent">
           <span className="metric-kicker">Material diverted</span>
           <strong>{diverted.toFixed(1)} t</strong>
-          <small>From agreed demo transactions</small>
+          <small>From agreed transactions</small>
         </article>
       </section>
 
@@ -128,49 +128,42 @@ export function Dashboard() {
         <div className="panel panel--flush opportunity-highlight">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">Top nearby pathway</span>
-              <h2>Rice Husk → Brick Kiln Fuel</h2>
+              <span className="eyebrow">Compatible supply</span>
+              <h2>{firstOpenReq ? `${getMaterialName(firstOpenReq.material_id)}: ${activePathway?.receiver_industry ?? "selected pathway"}` : "Start with a buyer requirement"}</h2>
             </div>
-            <span className="evidence-tag">Symbiosis reference</span>
+            {firstOpenReq && <span className="evidence-tag">Active requirement</span>}
           </div>
-          <div className="pathway-flow">
-            <div className="pathway-node">
-              <small>Potential supplier</small>
-              <strong>Rice Mills (NIC 10612)</strong>
-              <span>Karnataka MSME Registry</span>
+
+          {firstOpenReq ? (
+            <>
+              <div className="pathway-flow">
+                <div className="pathway-node">
+                  <small>Requested material</small>
+                  <strong>{getMaterialName(firstOpenReq.material_id)}</strong>
+                  <span>{kgToTonnes(firstOpenReq.quantity_kg)} t required</span>
+                </div>
+                <div className="pathway-line"><span>Match</span>→</div>
+                <div className="pathway-node pathway-node--buyer">
+                  <small>Receiving industry</small>
+                  <strong>{activePathway?.receiver_industry ?? firstOpenReq.receiving_process_id.replace(/_/g, " ")}</strong>
+                  <span>{locationDisplay}</span>
+                </div>
+              </div>
+              <p className="fine-print">Supplier ranking is generated only after this requirement exists.</p>
+              <div className="hero-actions">
+                <Link className="button button--primary" to={`/requirements/${firstOpenReq.id}/matches`}>
+                  View compatible suppliers →
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="empty-state">
+              No material is assumed by default. Select a byproduct, receiving industry, quantity and budget first; then the nearby-supplier table is generated from that requirement.
+              <div className="hero-actions">
+                <Link className="button button--primary" to="/requirements">Create requirement →</Link>
+              </div>
             </div>
-            <div className="pathway-line">
-              <span>Nearby</span>→
-            </div>
-            <div className="pathway-node pathway-node--buyer">
-              <small>Active Buyer Profile</small>
-              <strong>{business?.name || "Brick Manufacturing"}</strong>
-              <span>{locationDisplay}</span>
-            </div>
-          </div>
-          <div className="compatibility-strip">
-            <span>✓ pathway supported</span>
-            <span>✓ same district</span>
-            <span>✓ quantity check</span>
-            <span>✓ moisture check</span>
-          </div>
-          <p className="fine-print">
-            * District-centroid matrix distance; actual site route should be confirmed before booking transport.
-          </p>
-          <div className="hero-actions">
-            {firstOpenReq ? (
-              <Link className="button button--primary" to={`/requirements/${firstOpenReq.id}/matches`}>
-                Analyse active opportunity →
-              </Link>
-            ) : (
-              <Link className="button button--primary" to="/requirements">
-                View Requirements →
-              </Link>
-            )}
-            <Link className="button button--ghost" to="/opportunities">
-              Why this works
-            </Link>
-          </div>
+          )}
         </div>
 
         <div className="panel panel--flush agent-panel">
@@ -263,7 +256,7 @@ export function Dashboard() {
               {listings.slice(0, 3).map((l) => (
                 <div className="compact-row" key={l.id}>
                   <div>
-                    <b>{l.material_id.replace(/_/g, " ")}</b>
+                    <b>{getMaterialName(l.material_id)}</b>
                     <small>
                       {kgToTonnes(l.available_quantity_kg)} t · {l.moisture_pct}% moisture
                     </small>

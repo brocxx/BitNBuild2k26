@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { api, API_MODE } from "../api";
+import { api } from "../api";
 import type { Business } from "../api";
 import { useAuth } from "../auth/AuthContext";
 
@@ -28,20 +28,13 @@ export function Layout() {
   useEffect(() => {
     let cancelled = false;
     api.getMe()
-      .then((me) => {
-        if (!cancelled && me?.business) setBusiness(me.business);
-      })
+      .then((me) => { if (!cancelled && me?.business) setBusiness(me.business); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [isAuthenticated]);
 
   const initials = business?.name
-    ? business.name
-        .split(" ")
-        .slice(0, 2)
-        .map((w) => w[0])
-        .join("")
-        .toUpperCase()
+    ? business.name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()
     : "KB";
 
   return (
@@ -56,26 +49,14 @@ export function Layout() {
 
         <nav className="sidebar-nav">
           {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => `side-link${isActive ? " side-link--active" : ""}`}
-            >
-              <span className="side-link__icon">{item.icon}</span>
-              <span>{item.label}</span>
+            <NavLink key={item.to} to={item.to} end={item.end}
+              className={({ isActive }) => `side-link${isActive ? " side-link--active" : ""}`}>
+              <span className="side-link__icon">{item.icon}</span><span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
         <div className="sidebar-spacer" />
-        {API_MODE !== "real" ? (
-          <div className="demo-pill">● MOCK MODE</div>
-        ) : (
-          <div className="demo-pill" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981", borderColor: "rgba(16, 185, 129, 0.3)" }}>
-            ● LIVE BACKEND
-          </div>
-        )}
         <button className="theme-toggle" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
           <span>{theme === "light" ? "☾" : "☀"}</span>
           <span>{theme === "light" ? "Dark mode" : "Light mode"}</span>
@@ -83,29 +64,14 @@ export function Layout() {
         <div className="enterprise-chip">
           <div className="avatar">{initials}</div>
           <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-            <strong>{business?.name || "KA-ENT-000179"}</strong>
-            <span>
-              {business?.location.district || "Kolar"} · {business?.enterprise_id || (business?.roles.includes("buyer") ? "Buyer" : "Seller")}
-            </span>
+            <strong>{business?.name || "Your enterprise"}</strong>
+            <span>{business ? `${business.location.district} · ${business.enterprise_id || business.roles.join(" / ")}` : "Karnataka"}</span>
           </div>
         </div>
-        {isAuthenticated && (
-          <button className="button button--ghost button--full" onClick={() => signOut()}>
-            Sign out
-          </button>
-        )}
+        {isAuthenticated && <button className="button button--ghost button--full" onClick={() => signOut()}>Sign out</button>}
       </aside>
 
       <main className="workspace">
-        <header className="topbar">
-          <div>
-            <span className="eyebrow">Circular Supply Network · Karnataka</span>
-          </div>
-          <div className="topbar-actions">
-            <span className="evidence-tag">Dataset-backed</span>
-            <span className="agent-status"><i /> 3 agents ready</span>
-          </div>
-        </header>
         <div className="page-wrap"><Outlet /></div>
       </main>
     </div>

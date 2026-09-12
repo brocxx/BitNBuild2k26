@@ -246,3 +246,6 @@ input:focus, select:focus { border-color: var(--green-700); box-shadow: 0 0 0 3p
   h1 { font-size: 2.55rem; }.metric-grid, .feature-grid--4, .two-column, .content-grid, .deal-grid, .slider-grid, .mini-feature-grid { grid-template-columns: 1fr; }
   .field-row { grid-template-columns: 1fr; }.spec-grid { grid-template-columns: repeat(2,1fr); }.pathway-flow, .recovery-flow { grid-template-columns: 1fr; }.pathway-line, .route-arrow { transform: rotate(90deg); justify-self: center; }.event-timeline__item { grid-template-columns: 60px 1fr; }.event-timeline__item .muted { grid-column: 2; }.section-heading { flex-direction: column; }
 }
+
+.opportunity-row--matches { grid-template-columns: 1.45fr 1fr .8fr 1fr 1fr 1fr 1fr; min-width: 1080px; }
+.button--table { margin-top: 6px; padding: 8px 12px; font-size: .72rem; }
