@@ -1,0 +1,2664 @@
+{
+  "components": {
+    "schemas": {
+      "Business": {
+        "properties": {
+          "enterprise_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enterprise Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "receiving_processes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Receiving Processes",
+            "type": "array"
+          },
+          "roles": {
+            "items": {
+              "enum": [
+                "buyer",
+                "seller"
+              ],
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "roles",
+          "receiving_processes",
+          "location"
+        ],
+        "title": "Business",
+        "type": "object"
+      },
+      "Costs": {
+        "properties": {
+          "buyer_total_paise": {
+            "description": "INR paise",
+            "minimum": 0.0,
+            "title": "Buyer Total Paise",
+            "type": "integer"
+          },
+          "freight_paise": {
+            "description": "INR paise",
+            "minimum": 0.0,
+            "title": "Freight Paise",
+            "type": "integer"
+          },
+          "material_paise": {
+            "description": "INR paise",
+            "minimum": 0.0,
+            "title": "Material Paise",
+            "type": "integer"
+          },
+          "seller_receives_paise": {
+            "description": "INR paise",
+            "minimum": 0.0,
+            "title": "Seller Receives Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "material_paise",
+          "freight_paise",
+          "buyer_total_paise",
+          "seller_receives_paise"
+        ],
+        "title": "Costs",
+        "type": "object"
+      },
+      "Deal": {
+        "properties": {
+          "buyer": {
+            "$ref": "#/components/schemas/Business"
+          },
+          "costs": {
+            "$ref": "#/components/schemas/Costs"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "intended_use": {
+            "title": "Intended Use",
+            "type": "string"
+          },
+          "listing_id": {
+            "title": "Listing Id",
+            "type": "string"
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "negotiation_id": {
+            "title": "Negotiation Id",
+            "type": "string"
+          },
+          "quantity_kg": {
+            "description": "kilograms",
+            "minimum": 0.0,
+            "title": "Quantity Kg",
+            "type": "integer"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/Business"
+          },
+          "status": {
+            "enum": [
+              "agreed",
+              "pickup_scheduled",
+              "collected",
+              "delivered",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "transport_option": {
+            "$ref": "#/components/schemas/TransportOption"
+          },
+          "unit_price_paise_per_tonne": {
+            "description": "INR paise per tonne",
+            "minimum": 0.0,
+            "title": "Unit Price Paise Per Tonne",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "negotiation_id",
+          "requirement_id",
+          "listing_id",
+          "seller",
+          "buyer",
+          "material_id",
+          "intended_use",
+          "quantity_kg",
+          "unit_price_paise_per_tonne",
+          "costs",
+          "transport_option",
+          "status",
+          "created_at"
+        ],
+        "title": "Deal",
+        "type": "object"
+      },
+      "DealStatusUpdate": {
+        "properties": {
+          "status": {
+            "enum": [
+              "pickup_scheduled",
+              "collected",
+              "delivered",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "DealStatusUpdate",
+        "type": "object"
+      },
+      "DistrictRef": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "lat",
+          "lon"
+        ],
+        "title": "DistrictRef",
+        "type": "object"
+      },
+      "Event": {
+        "properties": {
+          "actor": {
+            "enum": [
+              "buyer",
+              "seller",
+              "broker",
+              "system"
+            ],
+            "title": "Actor",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "type": {
+            "enum": [
+              "started",
+              "offer",
+              "candidate_rejected",
+              "agreed",
+              "no_deal",
+              "failed"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "type",
+          "actor",
+          "message",
+          "created_at"
+        ],
+        "title": "Event",
+        "type": "object"
+      },
+      "EventsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "last_seq": {
+            "title": "Last Seq",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "last_seq"
+        ],
+        "title": "EventsResponse",
+        "type": "object"
+      },
+      "ExcludedListing": {
+        "properties": {
+          "listing_id": {
+            "title": "Listing Id",
+            "type": "string"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "listing_id",
+          "reason_codes"
+        ],
+        "title": "ExcludedListing",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "Listing": {
+        "description": "Public listing. Deliberately has no seller floor field.",
+        "properties": {
+          "asking_price_paise_per_tonne": {
+            "description": "INR paise per tonne",
+            "minimum": 0.0,
+            "title": "Asking Price Paise Per Tonne",
+            "type": "integer"
+          },
+          "available_quantity_kg": {
+            "description": "kilograms",
+            "minimum": 0.0,
+            "title": "Available Quantity Kg",
+            "type": "integer"
+          },
+          "contamination_notes": {
+            "title": "Contamination Notes",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "moisture_pct": {
+            "title": "Moisture Pct",
+            "type": "number"
+          },
+          "pickup_window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/Business"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seller",
+          "material_id",
+          "available_quantity_kg",
+          "asking_price_paise_per_tonne",
+          "moisture_pct",
+          "contamination_notes",
+          "pickup_window",
+          "location",
+          "status"
+        ],
+        "title": "Listing",
+        "type": "object"
+      },
+      "ListingCreate": {
+        "properties": {
+          "asking_price_paise_per_tonne": {
+            "description": "INR paise per tonne",
+            "minimum": 0.0,
+            "title": "Asking Price Paise Per Tonne",
+            "type": "integer"
+          },
+          "available_quantity_kg": {
+            "description": "kilograms",
+            "exclusiveMinimum": 0.0,
+            "title": "Available Quantity Kg",
+            "type": "integer"
+          },
+          "contamination_notes": {
+            "default": "",
+            "title": "Contamination Notes",
+            "type": "string"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "moisture_pct": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Moisture Pct",
+            "type": "number"
+          },
+          "pickup_window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "seller_floor_paise_per_tonne": {
+            "description": "INR paise per tonne",
+            "minimum": 0.0,
+            "title": "Seller Floor Paise Per Tonne",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "material_id",
+          "available_quantity_kg",
+          "asking_price_paise_per_tonne",
+          "seller_floor_paise_per_tonne",
+          "moisture_pct",
+          "pickup_window"
+        ],
+        "title": "ListingCreate",
+        "type": "object"
+      },
+      "ListingUpdate": {
+        "properties": {
+          "asking_price_paise_per_tonne": {
+            "anyOf": [
+              {
+                "description": "INR paise per tonne",
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asking Price Paise Per Tonne"
+          },
+          "pickup_window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Window"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "seller_floor_paise_per_tonne": {
+            "anyOf": [
+              {
+                "description": "INR paise per tonne",
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Floor Paise Per Tonne"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "open",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "ListingUpdate",
+        "type": "object"
+      },
+      "Location": {
+        "properties": {
+          "district": {
+            "title": "District",
+            "type": "string"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon"
+          },
+          "precision": {
+            "default": "district",
+            "enum": [
+              "district",
+              "confirmed_site"
+            ],
+            "title": "Precision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "district"
+        ],
+        "title": "Location",
+        "type": "object"
+      },
+      "MatchCandidate": {
+        "properties": {
+          "initial_best_cost": {
+            "$ref": "#/components/schemas/Costs"
+          },
+          "listing": {
+            "$ref": "#/components/schemas/Listing"
+          },
+          "pathway_use": {
+            "title": "Pathway Use",
+            "type": "string"
+          },
+          "transport_options": {
+            "items": {
+              "$ref": "#/components/schemas/TransportOption"
+            },
+            "title": "Transport Options",
+            "type": "array"
+          }
+        },
+        "required": [
+          "listing",
+          "pathway_use",
+          "transport_options",
+          "initial_best_cost"
+        ],
+        "title": "MatchCandidate",
+        "type": "object"
+      },
+      "MatchesResponse": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/MatchCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/ExcludedListing"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
+          "missing_transport_listing_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Transport Listing Ids",
+            "type": "array"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "candidates",
+          "excluded",
+          "missing_transport_listing_ids"
+        ],
+        "title": "MatchesResponse",
+        "type": "object"
+      },
+      "MaterialRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "MaterialRef",
+        "type": "object"
+      },
+      "MeResponse": {
+        "properties": {
+          "business": {
+            "$ref": "#/components/schemas/Business"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "business"
+        ],
+        "title": "MeResponse",
+        "type": "object"
+      },
+      "Negotiation": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "current_listing_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Listing Id"
+          },
+          "deal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deal Id"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "max_rounds": {
+            "title": "Max Rounds",
+            "type": "integer"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/Offer"
+            },
+            "title": "Offers",
+            "type": "array"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "round": {
+            "title": "Round",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "agreed",
+              "no_deal",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "requirement_id",
+          "status",
+          "round",
+          "max_rounds",
+          "offers",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "Negotiation",
+        "type": "object"
+      },
+      "NegotiationAccepted": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "agreed",
+              "no_deal",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "NegotiationAccepted",
+        "type": "object"
+      },
+      "NegotiationCreate": {
+        "properties": {
+          "listing_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Listing Ids",
+            "type": "array"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "listing_ids"
+        ],
+        "title": "NegotiationCreate",
+        "type": "object"
+      },
+      "NegotiationSummary": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "deal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deal Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "agreed",
+              "no_deal",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "requirement_id",
+          "status",
+          "created_at"
+        ],
+        "title": "NegotiationSummary",
+        "type": "object"
+      },
+      "Offer": {
+        "properties": {
+          "action": {
+            "enum": [
+              "propose",
+              "counter",
+              "accept",
+              "reject"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "author": {
+            "enum": [
+              "buyer",
+              "seller",
+              "broker"
+            ],
+            "title": "Author",
+            "type": "string"
+          },
+          "costs": {
+            "$ref": "#/components/schemas/Costs"
+          },
+          "delivery_at": {
+            "format": "date-time",
+            "title": "Delivery At",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "listing_id": {
+            "title": "Listing Id",
+            "type": "string"
+          },
+          "pickup_at": {
+            "format": "date-time",
+            "title": "Pickup At",
+            "type": "string"
+          },
+          "quantity_kg": {
+            "description": "kilograms",
+            "minimum": 0.0,
+            "title": "Quantity Kg",
+            "type": "integer"
+          },
+          "responds_to_offer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responds To Offer Id"
+          },
+          "transport_option_id": {
+            "title": "Transport Option Id",
+            "type": "string"
+          },
+          "unit_price_paise_per_tonne": {
+            "description": "INR paise per tonne",
+            "minimum": 0.0,
+            "title": "Unit Price Paise Per Tonne",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "listing_id",
+          "transport_option_id",
+          "quantity_kg",
+          "unit_price_paise_per_tonne",
+          "costs",
+          "pickup_at",
+          "delivery_at",
+          "author",
+          "action",
+          "explanation",
+          "expires_at"
+        ],
+        "title": "Offer",
+        "type": "object"
+      },
+      "OwnerListing": {
+        "properties": {
+          "asking_price_paise_per_tonne": {
+            "description": "INR paise per tonne",
+            "minimum": 0.0,
+            "title": "Asking Price Paise Per Tonne",
+            "type": "integer"
+          },
+          "available_quantity_kg": {
+            "description": "kilograms",
+            "minimum": 0.0,
+            "title": "Available Quantity Kg",
+            "type": "integer"
+          },
+          "contamination_notes": {
+            "title": "Contamination Notes",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "moisture_pct": {
+            "title": "Moisture Pct",
+            "type": "number"
+          },
+          "pickup_window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/Business"
+          },
+          "seller_floor_paise_per_tonne": {
+            "description": "INR paise per tonne",
+            "minimum": 0.0,
+            "title": "Seller Floor Paise Per Tonne",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seller",
+          "material_id",
+          "available_quantity_kg",
+          "asking_price_paise_per_tonne",
+          "moisture_pct",
+          "contamination_notes",
+          "pickup_window",
+          "location",
+          "status",
+          "seller_floor_paise_per_tonne"
+        ],
+        "title": "OwnerListing",
+        "type": "object"
+      },
+      "OwnerRequirement": {
+        "properties": {
+          "buyer": {
+            "$ref": "#/components/schemas/Business"
+          },
+          "buyer_max_total_paise": {
+            "description": "INR paise",
+            "minimum": 0.0,
+            "title": "Buyer Max Total Paise",
+            "type": "integer"
+          },
+          "delivery_window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "max_moisture_pct": {
+            "title": "Max Moisture Pct",
+            "type": "number"
+          },
+          "quantity_kg": {
+            "description": "kilograms",
+            "minimum": 0.0,
+            "title": "Quantity Kg",
+            "type": "integer"
+          },
+          "receiving_process_id": {
+            "title": "Receiving Process Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "fulfilled",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "buyer",
+          "material_id",
+          "receiving_process_id",
+          "quantity_kg",
+          "max_moisture_pct",
+          "delivery_window",
+          "location",
+          "status",
+          "buyer_max_total_paise"
+        ],
+        "title": "OwnerRequirement",
+        "type": "object"
+      },
+      "Page_Deal_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Deal"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[Deal]",
+        "type": "object"
+      },
+      "Page_Listing_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Listing"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[Listing]",
+        "type": "object"
+      },
+      "Page_NegotiationSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NegotiationSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[NegotiationSummary]",
+        "type": "object"
+      },
+      "Page_OwnerListing_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OwnerListing"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[OwnerListing]",
+        "type": "object"
+      },
+      "Page_OwnerRequirement_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OwnerRequirement"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[OwnerRequirement]",
+        "type": "object"
+      },
+      "ReceivingProcessRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "material_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Material Ids",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "material_ids"
+        ],
+        "title": "ReceivingProcessRef",
+        "type": "object"
+      },
+      "ReferenceResponse": {
+        "properties": {
+          "districts": {
+            "items": {
+              "$ref": "#/components/schemas/DistrictRef"
+            },
+            "title": "Districts",
+            "type": "array"
+          },
+          "materials": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialRef"
+            },
+            "title": "Materials",
+            "type": "array"
+          },
+          "receiving_processes": {
+            "items": {
+              "$ref": "#/components/schemas/ReceivingProcessRef"
+            },
+            "title": "Receiving Processes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "materials",
+          "districts",
+          "receiving_processes"
+        ],
+        "title": "ReferenceResponse",
+        "type": "object"
+      },
+      "RequirementCreate": {
+        "properties": {
+          "buyer_max_total_paise": {
+            "description": "INR paise",
+            "minimum": 0.0,
+            "title": "Buyer Max Total Paise",
+            "type": "integer"
+          },
+          "delivery_window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "max_moisture_pct": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Max Moisture Pct",
+            "type": "number"
+          },
+          "quantity_kg": {
+            "description": "kilograms",
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity Kg",
+            "type": "integer"
+          },
+          "receiving_process_id": {
+            "title": "Receiving Process Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_id",
+          "receiving_process_id",
+          "quantity_kg",
+          "max_moisture_pct",
+          "delivery_window",
+          "buyer_max_total_paise"
+        ],
+        "title": "RequirementCreate",
+        "type": "object"
+      },
+      "TransportOption": {
+        "properties": {
+          "capacity_kg": {
+            "description": "kilograms",
+            "minimum": 0.0,
+            "title": "Capacity Kg",
+            "type": "integer"
+          },
+          "delivery_at": {
+            "format": "date-time",
+            "title": "Delivery At",
+            "type": "string"
+          },
+          "distance_basis": {
+            "default": "unknown",
+            "enum": [
+              "road",
+              "district_straight_line",
+              "unknown"
+            ],
+            "title": "Distance Basis",
+            "type": "string"
+          },
+          "distance_m": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance M"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "freight_paise": {
+            "description": "INR paise",
+            "minimum": 0.0,
+            "title": "Freight Paise",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "listing_id": {
+            "title": "Listing Id",
+            "type": "string"
+          },
+          "pickup_at": {
+            "format": "date-time",
+            "title": "Pickup At",
+            "type": "string"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "entered_quote",
+              "configured_estimate"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "listing_id",
+          "requirement_id",
+          "label",
+          "freight_paise",
+          "capacity_kg",
+          "pickup_at",
+          "delivery_at",
+          "expires_at",
+          "source"
+        ],
+        "title": "TransportOption",
+        "type": "object"
+      },
+      "TransportOptionCreate": {
+        "properties": {
+          "capacity_kg": {
+            "exclusiveMinimum": 0.0,
+            "title": "Capacity Kg",
+            "type": "integer"
+          },
+          "delivery_at": {
+            "format": "date-time",
+            "title": "Delivery At",
+            "type": "string"
+          },
+          "distance_basis": {
+            "default": "unknown",
+            "enum": [
+              "road",
+              "district_straight_line",
+              "unknown"
+            ],
+            "title": "Distance Basis",
+            "type": "string"
+          },
+          "distance_m": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance M"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "freight_paise": {
+            "description": "INR paise",
+            "minimum": 0.0,
+            "title": "Freight Paise",
+            "type": "integer"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "listing_id": {
+            "title": "Listing Id",
+            "type": "string"
+          },
+          "pickup_at": {
+            "format": "date-time",
+            "title": "Pickup At",
+            "type": "string"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "entered_quote",
+              "configured_estimate"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "listing_id",
+          "requirement_id",
+          "label",
+          "freight_paise",
+          "capacity_kg",
+          "pickup_at",
+          "delivery_at",
+          "expires_at",
+          "source"
+        ],
+        "title": "TransportOptionCreate",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "Window": {
+        "properties": {
+          "end": {
+            "format": "date-time",
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "format": "date-time",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "Window",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "AccessToken": {
+        "description": "AUTH_MODE=dev: paste `dev:<email>` (for example `dev:buyer1@demo.bitnbuild.local`). AUTH_MODE=supabase: paste a Supabase access token.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "B2B exchange for secondary industrial materials. Prices are entered by participants; freight charges are entered or configured estimates. No market price feed, benchmark, or carrier booking is involved.",
+    "title": "Karnataka Industrial Byproduct Exchange",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/deals/{deal_id}": {
+      "get": {
+        "operationId": "get_deal_api_v1_deals__deal_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deal"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Get Deal",
+        "tags": [
+          "deals"
+        ]
+      }
+    },
+    "/api/v1/deals/{deal_id}/status": {
+      "patch": {
+        "operationId": "update_deal_status_api_v1_deals__deal_id__status_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DealStatusUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deal"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Update Deal Status",
+        "tags": [
+          "deals"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "description": "Liveness only. Deliberately exposes nothing about dependencies.",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/listings": {
+      "get": {
+        "operationId": "list_listings_api_v1_listings_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "material_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Material Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "district",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "District"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_Listing_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "List Listings",
+        "tags": [
+          "listings"
+        ]
+      },
+      "post": {
+        "operationId": "create_listing_api_v1_listings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListingCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerListing"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Create Listing",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/api/v1/listings/{listing_id}": {
+      "get": {
+        "operationId": "get_listing_api_v1_listings__listing_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listing_id",
+            "required": true,
+            "schema": {
+              "title": "Listing Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Listing"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Get Listing",
+        "tags": [
+          "listings"
+        ]
+      },
+      "patch": {
+        "operationId": "update_listing_api_v1_listings__listing_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listing_id",
+            "required": true,
+            "schema": {
+              "title": "Listing Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListingUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerListing"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Update Listing",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "me_api_v1_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Me",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/api/v1/me/deals": {
+      "get": {
+        "operationId": "my_deals_api_v1_me_deals_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_Deal_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "My Deals",
+        "tags": [
+          "deals"
+        ]
+      }
+    },
+    "/api/v1/me/listings": {
+      "get": {
+        "operationId": "my_listings_api_v1_me_listings_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_OwnerListing_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "My Listings",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/api/v1/me/negotiations": {
+      "get": {
+        "operationId": "my_negotiations_api_v1_me_negotiations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_NegotiationSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "My Negotiations",
+        "tags": [
+          "negotiations"
+        ]
+      }
+    },
+    "/api/v1/me/requirements": {
+      "get": {
+        "operationId": "my_requirements_api_v1_me_requirements_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_OwnerRequirement_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "My Requirements",
+        "tags": [
+          "requirements"
+        ]
+      }
+    },
+    "/api/v1/negotiations": {
+      "post": {
+        "operationId": "start_negotiation_api_v1_negotiations_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NegotiationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NegotiationAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Start Negotiation",
+        "tags": [
+          "negotiations"
+        ]
+      }
+    },
+    "/api/v1/negotiations/{negotiation_id}": {
+      "get": {
+        "operationId": "get_negotiation_api_v1_negotiations__negotiation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "negotiation_id",
+            "required": true,
+            "schema": {
+              "title": "Negotiation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Negotiation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Get Negotiation",
+        "tags": [
+          "negotiations"
+        ]
+      }
+    },
+    "/api/v1/negotiations/{negotiation_id}/events": {
+      "get": {
+        "operationId": "get_events_api_v1_negotiations__negotiation_id__events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "negotiation_id",
+            "required": true,
+            "schema": {
+              "title": "Negotiation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after_seq",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "After Seq",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Get Events",
+        "tags": [
+          "negotiations"
+        ]
+      }
+    },
+    "/api/v1/reference": {
+      "get": {
+        "operationId": "reference_api_v1_reference_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Reference",
+        "tags": [
+          "reference"
+        ]
+      }
+    },
+    "/api/v1/requirements": {
+      "post": {
+        "operationId": "create_requirement_api_v1_requirements_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequirementCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerRequirement"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Create Requirement",
+        "tags": [
+          "requirements"
+        ]
+      }
+    },
+    "/api/v1/requirements/{requirement_id}": {
+      "get": {
+        "operationId": "get_requirement_api_v1_requirements__requirement_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerRequirement"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Get Requirement",
+        "tags": [
+          "requirements"
+        ]
+      }
+    },
+    "/api/v1/requirements/{requirement_id}/matches": {
+      "get": {
+        "operationId": "get_matches_api_v1_requirements__requirement_id__matches_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Get Matches",
+        "tags": [
+          "requirements"
+        ]
+      }
+    },
+    "/api/v1/transport-options": {
+      "post": {
+        "operationId": "create_transport_option_api_v1_transport_options_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransportOptionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransportOption"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Create Transport Option",
+        "tags": [
+          "requirements"
+        ]
+      }
+    }
+  }
+}

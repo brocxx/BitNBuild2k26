@@ -1,0 +1,556 @@
+# Karnataka Industrial Byproduct Exchange — manual API walkthrough
+#
+# Open this file in VS Code with the "REST Client" extension (humao.rest-client)
+# installed. A "Send Request" link appears above each request. Responses open in
+# a side pane, and later requests reuse IDs captured from earlier ones.
+#
+# Before you start:
+#     cd backend
+#     python -m app.data.cli reset
+#     uvicorn app.main:app --reload
+#
+# Work top to bottom the first time. Each stage says what you should see and
+# what it proves. After stage 9 the demo data is spent — run `reset` again.
+
+@base = http://localhost:8000/api/v1
+
+# Seeded demo accounts. AUTH_MODE=dev accepts "dev:<email>" as the token.
+@buyer  = dev:buyer1@demo.bitnbuild.local
+@buyer2 = dev:buyer2@demo.bitnbuild.local
+@seller1 = dev:seller1@demo.bitnbuild.local
+@seller2 = dev:seller2@demo.bitnbuild.local
+
+
+###############################################################################
+# STAGE 0 — the service is up
+###############################################################################
+
+# Expect 200 {"status":"ok"}. The only route that needs no token.
+GET {{base}}/health
+
+
+###############################################################################
+# STAGE 1 — authentication
+###############################################################################
+
+### No token at all -> 401 UNAUTHENTICATED, in the standard error envelope.
+GET {{base}}/me
+
+### Wrong scheme -> 401. The dev verifier never parses a JWT.
+GET {{base}}/me
+Authorization: Basic abc123
+
+### An email nobody seeded -> 401. Tokens are not self-asserting.
+GET {{base}}/me
+Authorization: Bearer dev:attacker@example.com
+
+### Real demo buyer -> 200. Note the business is resolved from the token,
+### not from anything the client sent.
+# @name me
+GET {{base}}/me
+Authorization: Bearer {{buyer}}
+
+@buyerBusinessId = {{me.response.body.$.business.id}}
+
+### The same route as a seller returns a different business entirely.
+GET {{base}}/me
+Authorization: Bearer {{seller1}}
+
+
+###############################################################################
+# STAGE 2 — reference data (imported from dataset/, with the fixes applied)
+###############################################################################
+
+# Expect 13 materials, 31 districts, 3 receiving processes.
+# brick_kiln_fuel should list rice_husk among its material_ids.
+GET {{base}}/reference
+Authorization: Bearer {{buyer}}
+
+
+###############################################################################
+# STAGE 3 — public listings, and the privacy boundary
+###############################################################################
+
+### All open listings. Expect 6 from the seed.
+# @name listings
+GET {{base}}/listings
+Authorization: Bearer {{buyer}}
+
+@listingId = {{listings.response.body.$.items[0].id}}
+
+### IMPORTANT: search this response for "seller_floor_paise_per_tonne".
+### It must not be there. The public Listing type has no such field at all.
+GET {{base}}/listings/{{listingId}}
+Authorization: Bearer {{buyer}}
+
+### Filter by material and district.
+GET {{base}}/listings?material_id=rice_husk
+Authorization: Bearer {{buyer}}
+
+### A district with no listings -> empty items, next_cursor null.
+GET {{base}}/listings?district=KODAGU
+Authorization: Bearer {{buyer}}
+
+### Pagination. Take next_cursor from this response and paste it below.
+# @name page1
+GET {{base}}/listings?limit=2
+Authorization: Bearer {{buyer}}
+
+### Second page. Should return different IDs, never a repeat.
+GET {{base}}/listings?limit=2&cursor={{page1.response.body.$.next_cursor}}
+Authorization: Bearer {{buyer}}
+
+### Out-of-range limit -> 422 INVALID_INPUT.
+GET {{base}}/listings?limit=500
+Authorization: Bearer {{buyer}}
+
+### Garbage cursor -> 422, not a 500.
+GET {{base}}/listings?cursor=!!!notacursor
+Authorization: Bearer {{buyer}}
+
+
+###############################################################################
+# STAGE 4 — owner views DO show the private fields
+###############################################################################
+
+### A seller's own listings. THIS one includes seller_floor_paise_per_tonne.
+### Compare with stage 3: same listing, different type, one extra field.
+GET {{base}}/me/listings
+Authorization: Bearer {{seller1}}
+
+### The buyer's own requirements, including buyer_max_total_paise.
+# @name myRequirements
+GET {{base}}/me/requirements
+Authorization: Bearer {{buyer}}
+
+# The seed makes two: one affordable, one deliberately not.
+# items[0] is the most recently created. Check buyer_max_total_paise on each
+# and set these two by hand if the ordering surprises you.
+@feasibleRequirementId = {{myRequirements.response.body.$.items[1].id}}
+@lowBudgetRequirementId = {{myRequirements.response.body.$.items[0].id}}
+
+### A seller trying to read the buyer's requirement -> 403, and the response
+### body contains no budget figure.
+GET {{base}}/requirements/{{feasibleRequirementId}}
+Authorization: Bearer {{seller1}}
+
+### The owner reading it -> 200 with the budget.
+GET {{base}}/requirements/{{feasibleRequirementId}}
+Authorization: Bearer {{buyer}}
+
+
+###############################################################################
+# STAGE 5 — creating your own listing and requirement
+###############################################################################
+
+### Create a listing. Note there is no seller_business_id field: the owner
+### comes from the token. Adjust the dates if you run this much later.
+# @name newListing
+POST {{base}}/listings
+Authorization: Bearer {{seller2}}
+Content-Type: application/json
+
+{
+  "material_id": "rice_husk",
+  "available_quantity_kg": 35000,
+  "asking_price_paise_per_tonne": 268000,
+  "seller_floor_paise_per_tonne": 244000,
+  "moisture_pct": 10.5,
+  "contamination_notes": "",
+  "pickup_window": {
+    "start": "2026-09-16T04:00:00Z",
+    "end": "2026-09-26T12:00:00Z"
+  }
+}
+
+@newListingId = {{newListing.response.body.$.id}}
+
+### Floor above asking price -> 422. The model rejects it before the database.
+POST {{base}}/listings
+Authorization: Bearer {{seller2}}
+Content-Type: application/json
+
+{
+  "material_id": "rice_husk",
+  "available_quantity_kg": 1000,
+  "asking_price_paise_per_tonne": 200000,
+  "seller_floor_paise_per_tonne": 250000,
+  "moisture_pct": 10,
+  "pickup_window": {"start": "2026-09-16T04:00:00Z", "end": "2026-09-26T12:00:00Z"}
+}
+
+### Window that ends before it starts -> 422.
+POST {{base}}/listings
+Authorization: Bearer {{seller2}}
+Content-Type: application/json
+
+{
+  "material_id": "rice_husk",
+  "available_quantity_kg": 1000,
+  "asking_price_paise_per_tonne": 200000,
+  "seller_floor_paise_per_tonne": 190000,
+  "moisture_pct": 10,
+  "pickup_window": {"start": "2026-09-26T12:00:00Z", "end": "2026-09-16T04:00:00Z"}
+}
+
+### Unknown material -> 422.
+POST {{base}}/listings
+Authorization: Bearer {{seller2}}
+Content-Type: application/json
+
+{
+  "material_id": "unobtainium",
+  "available_quantity_kg": 1000,
+  "asking_price_paise_per_tonne": 1000,
+  "seller_floor_paise_per_tonne": 1000,
+  "moisture_pct": 1,
+  "pickup_window": {"start": "2026-09-16T04:00:00Z", "end": "2026-09-26T12:00:00Z"}
+}
+
+### Someone else's listing -> 403.
+PATCH {{base}}/listings/{{newListingId}}
+Authorization: Bearer {{seller1}}
+Content-Type: application/json
+
+{"status": "closed"}
+
+### The owner may -> 200.
+PATCH {{base}}/listings/{{newListingId}}
+Authorization: Bearer {{seller2}}
+Content-Type: application/json
+
+{"asking_price_paise_per_tonne": 265000}
+
+### Create a requirement. Try a process the buyer has NOT confirmed first:
+### expect 422 PROCESS_UNCONFIRMED.
+POST {{base}}/requirements
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+
+{
+  "material_id": "rice_husk",
+  "receiving_process_id": "timber_drying_boiler_fuel",
+  "quantity_kg": 20000,
+  "max_moisture_pct": 15,
+  "delivery_window": {"start": "2026-09-18T04:00:00Z", "end": "2026-09-30T12:00:00Z"},
+  "buyer_max_total_paise": 7000000
+}
+
+### Now the confirmed one -> 201.
+# @name newRequirement
+POST {{base}}/requirements
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+
+{
+  "material_id": "rice_husk",
+  "receiving_process_id": "brick_kiln_fuel",
+  "quantity_kg": 20000,
+  "max_moisture_pct": 15,
+  "delivery_window": {"start": "2026-09-18T04:00:00Z", "end": "2026-09-30T12:00:00Z"},
+  "buyer_max_total_paise": 7000000
+}
+
+@newRequirementId = {{newRequirement.response.body.$.id}}
+
+
+###############################################################################
+# STAGE 6 — compatibility analysis
+###############################################################################
+
+### The seeded requirement. Expect 3 candidates ranked by delivered cost, and
+### 3 exclusions with DIFFERENT reason codes:
+###   QUALITY_MISMATCH          (moisture above the buyer's limit)
+###   QUALITY_REVIEW_REQUIRED   (contamination note not covered by a reviewed flag)
+###   INSUFFICIENT_QUANTITY     (batch smaller than requested)
+###
+### Check two things that matter:
+###  - a candidate whose delivered cost EXCEEDS the budget is still listed,
+###    because the seller may concede during negotiation
+###  - the candidate with the lowest freight is not necessarily first
+# @name matches
+GET {{base}}/requirements/{{feasibleRequirementId}}/matches
+Authorization: Bearer {{buyer}}
+
+@candidate1 = {{matches.response.body.$.candidates[0].listing.id}}
+@candidate2 = {{matches.response.body.$.candidates[1].listing.id}}
+@candidate3 = {{matches.response.body.$.candidates[2].listing.id}}
+
+### The requirement you created in stage 5 has no transport options yet, so
+### every listing lands in missing_transport_listing_ids with NO_TRANSPORT_OPTION.
+### This is the "you must enter freight before you can compare" state.
+GET {{base}}/requirements/{{newRequirementId}}/matches
+Authorization: Bearer {{buyer}}
+
+### A seller cannot see another business's analysis -> 403.
+GET {{base}}/requirements/{{feasibleRequirementId}}/matches
+Authorization: Bearer {{seller1}}
+
+
+###############################################################################
+# STAGE 7 — entering a transport option
+###############################################################################
+
+### Enter freight for the listing/requirement pair you created. Freight is a
+### COMPLETE per-shipment charge, never a per-km rate, and it is never derived
+### from the district distance matrix.
+POST {{base}}/transport-options
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+
+{
+  "listing_id": "{{newListingId}}",
+  "requirement_id": "{{newRequirementId}}",
+  "label": "Entered quote, 2-day transit",
+  "freight_paise": 1750000,
+  "capacity_kg": 25000,
+  "pickup_at": "2026-09-19T05:00:00Z",
+  "delivery_at": "2026-09-21T05:00:00Z",
+  "expires_at": "2026-09-25T00:00:00Z",
+  "source": "entered_quote",
+  "distance_m": 210000,
+  "distance_basis": "district_straight_line"
+}
+
+### An unrelated business entering freight for someone else's pair -> 403.
+POST {{base}}/transport-options
+Authorization: Bearer {{seller1}}
+Content-Type: application/json
+
+{
+  "listing_id": "{{newListingId}}",
+  "requirement_id": "{{newRequirementId}}",
+  "label": "Not mine to quote",
+  "freight_paise": 1,
+  "capacity_kg": 25000,
+  "pickup_at": "2026-09-19T05:00:00Z",
+  "delivery_at": "2026-09-21T05:00:00Z",
+  "expires_at": "2026-09-25T00:00:00Z",
+  "source": "entered_quote"
+}
+
+### Now re-run matches for your requirement: the listing should have moved out
+### of missing_transport_listing_ids and into candidates with a delivered cost.
+GET {{base}}/requirements/{{newRequirementId}}/matches
+Authorization: Bearer {{buyer}}
+
+
+###############################################################################
+# STAGE 8 — negotiation, agreement, reservation
+###############################################################################
+
+### Start a negotiation against the three seeded candidates.
+### Returns 202 {"id": "...", "status": "queued"} immediately.
+# @name negotiation
+POST {{base}}/negotiations
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+
+{
+  "requirement_id": "{{feasibleRequirementId}}",
+  "listing_ids": ["{{candidate1}}", "{{candidate2}}", "{{candidate3}}"]
+}
+
+@negotiationId = {{negotiation.response.body.$.id}}
+
+### Poll this until status leaves queued/running. With AGENT_MODE=fake it is
+### already terminal by the time you click. Expect status "agreed", a deal_id,
+### and an offers array where prices MOVE between rounds.
+# @name negotiationDetail
+GET {{base}}/negotiations/{{negotiationId}}
+Authorization: Bearer {{buyer}}
+
+@dealId = {{negotiationDetail.response.body.$.deal_id}}
+
+### The event timeline the UI polls. Ascending seq, no duplicates.
+### First event "started", last one "agreed" / "no_deal" / "failed".
+# @name events
+GET {{base}}/negotiations/{{negotiationId}}/events
+Authorization: Bearer {{buyer}}
+
+### Polling from the last sequence returns an empty list — this is the
+### stop condition the frontend uses.
+GET {{base}}/negotiations/{{negotiationId}}/events?after_seq={{events.response.body.$.last_seq}}
+Authorization: Bearer {{buyer}}
+
+### THE IMPORTANT ONE. The same negotiation as a seller.
+### Compare the offers array with the buyer's view above: a seller must see
+### ONLY its own listing's offers, never a competitor's. If this seller lost,
+### deal_id and current_listing_id are both null — a losing seller is not even
+### told that a deal happened.
+GET {{base}}/negotiations/{{negotiationId}}
+Authorization: Bearer {{seller1}}
+
+### And the seller's event feed, filtered the same way.
+GET {{base}}/negotiations/{{negotiationId}}/events
+Authorization: Bearer {{seller1}}
+
+### Idempotency: same key, same body -> 200 with the ORIGINAL negotiation id,
+### not a second run. Paste the key you used above in place of the guid.
+POST {{base}}/negotiations
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+Idempotency-Key: replay-test-1
+
+{
+  "requirement_id": "{{feasibleRequirementId}}",
+  "listing_ids": ["{{candidate1}}"]
+}
+
+### Send the request above a second time unchanged -> 200, same id.
+### Then send this one: SAME key, DIFFERENT body -> 409 IDEMPOTENCY_KEY_REUSED.
+POST {{base}}/negotiations
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+Idempotency-Key: replay-test-1
+
+{
+  "requirement_id": "{{feasibleRequirementId}}",
+  "listing_ids": ["{{candidate2}}"]
+}
+
+### No Idempotency-Key at all -> 422.
+POST {{base}}/negotiations
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+
+{
+  "requirement_id": "{{feasibleRequirementId}}",
+  "listing_ids": ["{{candidate1}}"]
+}
+
+### A seller trying to start a negotiation on someone's requirement -> 403.
+POST {{base}}/negotiations
+Authorization: Bearer {{seller1}}
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+
+{
+  "requirement_id": "{{feasibleRequirementId}}",
+  "listing_ids": ["{{candidate1}}"]
+}
+
+### Check the reservation actually happened: fetch the winning listing and
+### confirm available_quantity_kg dropped by exactly the deal quantity.
+### (scripts/inspect_db.py shows this more directly.)
+GET {{base}}/listings/{{candidate1}}
+Authorization: Bearer {{buyer}}
+
+
+###############################################################################
+# STAGE 9 — the deal and its lifecycle
+###############################################################################
+
+### Full agreed terms: cost breakdown, transport option, intended production
+### use from the symbiosis pathway, reserved quantity.
+GET {{base}}/deals/{{dealId}}
+Authorization: Bearer {{buyer}}
+
+### Everything the buyer is involved in.
+GET {{base}}/me/deals
+Authorization: Bearer {{buyer}}
+
+### Skipping straight to delivered -> 409 INVALID_TRANSITION.
+PATCH {{base}}/deals/{{dealId}}/status
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+
+{"status": "delivered"}
+
+### The buyer trying to mark pickup scheduled -> 403. That is the seller's move.
+PATCH {{base}}/deals/{{dealId}}/status
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+
+{"status": "pickup_scheduled"}
+
+### Find out which seller won: read the deal above and use that account.
+### Substitute the winning seller's email here.
+PATCH {{base}}/deals/{{dealId}}/status
+Authorization: Bearer {{seller1}}
+Content-Type: application/json
+
+{"status": "pickup_scheduled"}
+
+### Seller marks collected.
+PATCH {{base}}/deals/{{dealId}}/status
+Authorization: Bearer {{seller1}}
+Content-Type: application/json
+
+{"status": "collected"}
+
+### Buyer marks delivered. Full lifecycle done.
+PATCH {{base}}/deals/{{dealId}}/status
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+
+{"status": "delivered"}
+
+### After collection, cancelling -> 409 CANCELLATION_NOT_ALLOWED.
+PATCH {{base}}/deals/{{dealId}}/status
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+
+{"status": "cancelled"}
+
+
+###############################################################################
+# STAGE 10 — the honest no-deal case
+###############################################################################
+
+### The second seeded requirement has a budget that cannot reach any seller's
+### floor. Expect status "no_deal", failure_code "BUDGET_NOT_MET", deal_id null.
+### Then check the offers: no seller offer is ever below its own floor. The
+### system reports failure rather than manufacturing an agreement.
+# @name lowBudget
+GET {{base}}/requirements/{{lowBudgetRequirementId}}/matches
+Authorization: Bearer {{buyer}}
+
+###
+# @name noDeal
+POST {{base}}/negotiations
+Authorization: Bearer {{buyer}}
+Content-Type: application/json
+Idempotency-Key: {{$guid}}
+
+{
+  "requirement_id": "{{lowBudgetRequirementId}}",
+  "listing_ids": [
+    "{{lowBudget.response.body.$.candidates[0].listing.id}}",
+    "{{lowBudget.response.body.$.candidates[1].listing.id}}"
+  ]
+}
+
+###
+GET {{base}}/negotiations/{{noDeal.response.body.$.id}}
+Authorization: Bearer {{buyer}}
+
+###
+GET {{base}}/negotiations/{{noDeal.response.body.$.id}}/events
+Authorization: Bearer {{buyer}}
+
+
+###############################################################################
+# STAGE 11 — everything the caller should not be able to reach
+###############################################################################
+
+### Unknown IDs -> 404, in the error envelope.
+GET {{base}}/listings/does-not-exist
+Authorization: Bearer {{buyer}}
+
+###
+GET {{base}}/negotiations/does-not-exist
+Authorization: Bearer {{buyer}}
+
+###
+GET {{base}}/deals/does-not-exist
+Authorization: Bearer {{buyer}}
+
+### A business with no part in this deal -> 403.
+GET {{base}}/deals/{{dealId}}
+Authorization: Bearer {{buyer2}}
+
+### A negotiation the caller is not a participant in -> 403.
+GET {{base}}/negotiations/{{negotiationId}}
+Authorization: Bearer {{buyer2}}
