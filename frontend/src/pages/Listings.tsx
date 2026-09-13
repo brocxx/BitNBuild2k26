@@ -4,6 +4,8 @@ import type { OwnListing } from "../api";
 import { StatusBadge } from "../components/StatusBadge";
 import { kgToTonnes, paisePerTonneToRupees, formatWindow } from "../utils/format";
 import { DATASET_MATERIALS, getMaterialName } from "../data/datasetReference";
+import { NegotiationStrategySelector } from "../components/NegotiationStrategySelector";
+import type { NegotiationStrategy } from "../api";
 
 const EMPTY_FORM = {
   material_id: "",
@@ -20,6 +22,7 @@ export function Listings() {
   const [listings, setListings] = useState<OwnListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [strategy, setStrategy] = useState<NegotiationStrategy>("conceder");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,8 +50,10 @@ export function Listings() {
         contamination_notes: form.contamination_notes,
         pickup_window: { start: form.pickup_start, end: form.pickup_end },
         location: me.business.location,
+        negotiation_strategy: strategy,
       });
       setForm(EMPTY_FORM);
+      setStrategy("conceder");
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create listing.");
@@ -110,6 +115,7 @@ export function Listings() {
                 <small>Only your seller agent uses this. Buyers never see it.</small>
               </label>
             </div>
+            <NegotiationStrategySelector value={strategy} onChange={setStrategy} />
             <label>
               Moisture (%)
               <input type="number" min={0} max={100} step="0.1" required value={form.moisture_pct}

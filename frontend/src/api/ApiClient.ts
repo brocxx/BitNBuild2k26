@@ -21,6 +21,9 @@ import type {
   TransportOption,
   UpdateListingInput,
   DealStatus,
+  GreenCertificate,
+  MapEnterprisesResponse,
+  SymbiosisResult,
 } from "./types";
 
 export interface ListListingsParams {
@@ -55,4 +58,8 @@ export interface ApiClient {
   listMyDeals(cursor?: string | null): Promise<Paginated<Deal>>;
   getDeal(id: string): Promise<Deal>;
   updateDealStatus(id: string, status: DealStatus): Promise<Deal>;
+  getDealCertificate(id: string): Promise<GreenCertificate>;
+
+  getMapEnterprises(): Promise<MapEnterprisesResponse>;
+  getSymbiosisNeighbors(district: string, radiusKm?: number): Promise<SymbiosisResult>;
 }

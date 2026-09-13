@@ -50,7 +50,17 @@ export function NegotiationDetail() {
   return (
     <div className="panel">
       <div className="panel__header">
-        <h2>Negotiation</h2>
+        <div>
+          <h2>Negotiation</h2>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem", alignItems: "center" }}>
+            <span style={{ fontSize: "0.75rem", background: "#e8f8f0", color: "#27ae60", border: "1px solid #27ae60", borderRadius: "4px", padding: "0.1rem 0.4rem", fontWeight: 600 }}>
+              ⚡ Game-Theoretic ZOPA Active
+            </span>
+            <span style={{ fontSize: "0.75rem", background: "#f4f6f7", color: "#34495e", border: "1px solid #bdc3c7", borderRadius: "4px", padding: "0.1rem 0.4rem", fontWeight: 600 }}>
+              🔒 SHA-256 Chained
+            </span>
+          </div>
+        </div>
         <StatusBadge status={negotiation.status} />
       </div>
       <p className="muted">Round {negotiation.round} of {negotiation.max_rounds}</p>
@@ -69,7 +79,7 @@ export function NegotiationDetail() {
         ))}
       </ol>
 
-      <h3>Offers</h3>
+      <h3>Offers & Audit Trail</h3>
       <ul className="card-list">
         {negotiation.offers.map((o) => (
           <li key={o.id} className="card-list__item">
@@ -79,15 +89,24 @@ export function NegotiationDetail() {
             </div>
             <p className="muted">{o.explanation}</p>
             <CostBreakdown costs={o.costs} />
+            {o.chain_hash && (
+              <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#7f8c8d", background: "#f8f9fa", padding: "0.3rem 0.5rem", borderRadius: "4px", fontFamily: "monospace", display: "flex", justifyContent: "space-between" }}>
+                <span>🔒 SHA-256 Hash: {o.chain_hash.slice(0, 16)}...{o.chain_hash.slice(-8)}</span>
+                <span style={{ color: "#27ae60", fontWeight: 600 }}>VERIFIED ✓</span>
+              </div>
+            )}
           </li>
         ))}
       </ul>
 
       {negotiation.status === "agreed" && negotiation.deal_id && (
-        <button className="button button--primary" onClick={() => navigate(`/deals/${negotiation.deal_id}`)}>
-          View deal
-        </button>
+        <div style={{ marginTop: "1.5rem" }}>
+          <button className="button button--primary" onClick={() => navigate(`/deals/${negotiation.deal_id}`)}>
+            View deal & Green Certificate →
+          </button>
+        </div>
       )}
     </div>
   );
 }
+

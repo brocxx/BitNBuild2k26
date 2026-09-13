@@ -31,6 +31,8 @@ DistanceBasis = Literal["road", "district_straight_line", "unknown"]
 NegotiationStatus = Literal["queued", "running", "agreed", "no_deal", "failed"]
 OfferAuthor = Literal["buyer", "seller", "broker"]
 OfferAction = Literal["propose", "counter", "accept", "reject"]
+# Game theory concession strategy: Conceder = smooth linear, Boulware = hold then drop
+NegotiationStrategy = Literal["conceder", "boulware"]
 EventType = Literal[
     "started", "offer", "candidate_rejected", "agreed", "no_deal", "failed"
 ]
@@ -101,6 +103,7 @@ class Listing(BaseModel):
     pickup_window: Window
     location: Location
     status: ListingStatus
+    negotiation_strategy: NegotiationStrategy = "conceder"
 
 
 class OwnerListing(Listing):
@@ -116,6 +119,7 @@ class ListingCreate(BaseModel):
     contamination_notes: str = ""
     pickup_window: Window
     location: Location | None = None
+    negotiation_strategy: NegotiationStrategy = "conceder"
 
     @model_validator(mode="after")
     def _floor_not_above_asking(self) -> ListingCreate:
@@ -148,6 +152,7 @@ class Requirement(BaseModel):
     delivery_window: Window
     location: Location
     status: RequirementStatus
+    negotiation_strategy: NegotiationStrategy = "conceder"
 
 
 class OwnerRequirement(Requirement):
@@ -162,6 +167,7 @@ class RequirementCreate(BaseModel):
     delivery_window: Window
     buyer_max_total_paise: Money
     location: Location | None = None
+    negotiation_strategy: NegotiationStrategy = "conceder"
 
 
 # ---------------------------------------------------------------------------
@@ -247,6 +253,8 @@ class Offer(BaseModel):
     responds_to_offer_id: str | None = None
     explanation: str
     expires_at: datetime
+    # SHA-256 hash chained with the previous offer — tamper-evident audit log.
+    chain_hash: str = ""
 
 
 class Negotiation(BaseModel):
@@ -300,6 +308,36 @@ class EventsResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+class ESGMetrics(BaseModel):
+    material_id: str
+    material_display_name: str
+    replaces_virgin: str
+    quantity_kg: float
+    distance_km: float
+    gross_co2e_avoided_kg: float
+    transport_co2e_kg: float
+    net_co2e_avoided_kg: float
+    landfill_diverted_kg: float
+    carbon_credits_estimated: float
+    emission_factor_source: str
+
+
+class GreenCertificate(BaseModel):
+    certificate_id: str
+    issuer: str
+    deal_id: str
+    trade_date: datetime
+    seller: Business
+    buyer: Business
+    material_id: str
+    material_display_name: str
+    quantity_kg: Kilograms
+    transport_distance_km: float
+    esg_metrics: ESGMetrics
+    verification_hash: str
+    methodology: str
+
+
 class Deal(BaseModel):
     id: str
     negotiation_id: str
@@ -315,10 +353,58 @@ class Deal(BaseModel):
     transport_option: TransportOption
     status: DealStatus
     created_at: datetime
+    esg_metrics: ESGMetrics | None = None
 
 
 class DealStatusUpdate(BaseModel):
     status: Literal["pickup_scheduled", "collected", "delivered", "cancelled"]
+
+
+# ---------------------------------------------------------------------------
+# Map & Geospatial Symbiosis
+# ---------------------------------------------------------------------------
+
+
+class EnterpriseMapItem(BaseModel):
+    enterprise_id: str
+    enterprise_name: str
+    district: str
+    lat: float
+    lon: float
+    pincode: str | None = None
+    nic2_division: int
+    nic_description: str
+    communication_address: str | None = None
+
+
+class EnterprisesResponse(BaseModel):
+    total: int
+    count: int
+    items: list[EnterpriseMapItem]
+
+
+class SymbiosisMatch(BaseModel):
+    enterprise: EnterpriseMapItem
+    role: Literal["producer", "receiver"]
+    byproduct_name: str
+    byproduct_type: str
+    use_case: str
+    distance_km: float
+    source_citation: str
+
+
+class SymbiosisResponse(BaseModel):
+    query_district: str
+    radius_km: float
+    total_matches: int
+    matches: list[SymbiosisMatch]
+
+
+class MapStatsResponse(BaseModel):
+    total_enterprises: int
+    total_districts: int
+    total_symbiosis_pathways: int
+    active_trades: int
 
 
 # ---------------------------------------------------------------------------
@@ -356,3 +442,4 @@ class MeResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: Literal["ok"]
+

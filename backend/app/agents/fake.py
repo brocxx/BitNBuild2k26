@@ -22,6 +22,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from app.agents.base import AgentContext, AgentDecision
 from app.services.costing import compute_costs, max_unit_price_within_budget
+from app.services.zopa import concession_target
 
 # Fraction of the gap to its own limit that a side concedes by the final round.
 SELLER_TOTAL_CONCESSION = Decimal("0.80")
@@ -73,12 +74,14 @@ class FakeAgentProvider:
                 ),
             )
 
-        price = _interpolate(
-            context.asking_price_paise_per_tonne,
-            floor,
-            context.round_number,
-            context.max_rounds,
-            SELLER_TOTAL_CONCESSION,
+        # Use game-theory concession curve (Boulware or Conceder)
+        price = concession_target(
+            strategy=context.strategy,
+            round_number=context.round_number,
+            max_rounds=context.max_rounds,
+            start=context.asking_price_paise_per_tonne,
+            limit=floor,
+            max_share=float(SELLER_TOTAL_CONCESSION),
         )
         price = max(price, floor)
 
@@ -91,19 +94,6 @@ class FakeAgentProvider:
                 explanation=(
                     f"Opening at our listed price for {context.quantity_kg} kg, collected in "
                     f"the {context.transport.label} slot."
-                ),
-            )
-
-        if context.round_number >= context.max_rounds - 1 and price <= floor:
-            return AgentDecision(
-                action="reject",
-                listing_id=context.listing_id,
-                transport_option_id=context.transport.transport_option_id,
-                unit_price_paise_per_tonne=floor,
-                responds_to_offer_id=standing.offer_id,
-                explanation=(
-                    "We have conceded as far as this batch allows and the bid is still "
-                    "below what we can accept."
                 ),
             )
 
@@ -167,8 +157,14 @@ class FakeAgentProvider:
                 Decimal(1), rounding=ROUND_HALF_UP
             )
         )
-        price = _interpolate(
-            opening, ceiling, context.round_number, context.max_rounds, BUYER_TOTAL_CONCESSION
+        # Use game-theory concession curve (Boulware or Conceder)
+        price = concession_target(
+            strategy=context.strategy,
+            round_number=context.round_number,
+            max_rounds=context.max_rounds,
+            start=opening,
+            limit=ceiling,
+            max_share=float(BUYER_TOTAL_CONCESSION),
         )
         price = min(price, ceiling)
 
@@ -181,19 +177,6 @@ class FakeAgentProvider:
                 explanation=(
                     f"Bidding for {context.quantity_kg} kg delivered into "
                     f"{context.buyer_district}, freight included in our assessment."
-                ),
-            )
-
-        if context.round_number >= context.max_rounds - 1 and price >= ceiling:
-            return AgentDecision(
-                action="reject",
-                listing_id=context.listing_id,
-                transport_option_id=context.transport.transport_option_id,
-                unit_price_paise_per_tonne=ceiling,
-                responds_to_offer_id=standing.offer_id,
-                explanation=(
-                    "At the quoted freight charge, the seller's price puts the delivered "
-                    "cost beyond what this input is worth to us."
                 ),
             )
 

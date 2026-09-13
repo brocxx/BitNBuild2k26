@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.routes import catalog, deals, listings, negotiations, requirements
+from app.api.routes import catalog, deals, listings, map, negotiations, requirements
 
 api_router = APIRouter()
 api_router.include_router(catalog.router)
@@ -10,3 +10,5 @@ api_router.include_router(listings.router)
 api_router.include_router(requirements.router)
 api_router.include_router(negotiations.router)
 api_router.include_router(deals.router)
+api_router.include_router(map.router)
+

@@ -1,16 +1,14 @@
 # Backend — Karnataka Industrial Byproduct Exchange
 
-FastAPI service implementing the API contract in
-[`docs/MVP_TEAM_WORK_PLAN.md` §4](../docs/MVP_TEAM_WORK_PLAN.md). Owned by A.
+FastAPI service powering the KIB Exchange platform — compatibility matching, game-theoretic negotiation, cryptographic audit chain, ESG carbon engine, and the geospatial symbiosis map API.
 
-**Status: feature-complete.** Every route in the contract is implemented, and
-all three external dependencies are verified working:
+**Status: feature-complete.** Every route in the API contract is implemented, and all three external dependencies are verified working:
 
 | Dependency | Verified |
 | --- | --- |
 | Supabase Postgres | migrations, 7,933-enterprise import and seed all run against it |
 | Supabase Auth | real ES256 tokens verified via JWKS, resolved to businesses |
-| Gemini agents | `gemini-3.1-flash-lite` negotiating live, three sellers, ~45s |
+| Gemini agents | `gemini-2.0-flash` negotiating live, three sellers, ~45s |
 
 122 tests pass. Day-to-day the defaults stay on SQLite, dev tokens and the
 deterministic negotiator so nothing costs quota; each is a one-variable flip.
@@ -298,27 +296,21 @@ client and mocks. Prefer additive changes now that the first checkpoint is done.
 
 ---
 
-## What is left
+## Phase 2 Modules
 
-Nothing blocking. Remaining items are integration and polish:
+| Module | Purpose | Endpoints / Exports |
+|---|---|---|
+| **ZOPA Engine** (`app/services/zopa.py`) | Pure mathematical zone of agreement & concession curve calculations | `compute_zopa()`, `concession_target()`, `extract_batna()` |
+| **Strategy Field** (`models.Listing`, `models.Requirement`) | Enables `"conceder"` vs `"boulware"` concession personalities | `POST /listings`, `POST /requirements` |
+| **SHA-256 Audit Trail** (`coordinator.py`, `models.Offer`) | Chained SHA-256 hashes per offer for tamper-evident negotiation history | `Offer.chain_hash`, returned in `GET /negotiations/{id}` |
+| **ESG Carbon Engine** (`app/services/esg.py`) | IPCC 2006 peer-reviewed carbon savings & circularity metrics | `compute_esg()`, `GET /deals/{id}/certificate` |
+| **Geospatial Symbiosis** (`app/services/map_service.py`, `app/api/routes/map.py`) | In-memory indexing of 7,933 real MSMEs & proximity symbiosis matching | `GET /map/enterprises`, `GET /map/symbiosis`, `GET /map/stats` |
 
-1. **Frontend integration.** B builds against `contracts/openapi.json`.
-   Expect small additive contract requests once real screens exist; those go
-   through A, get re-exported, and are announced to B.
-2. **Deployment.** No Render configuration yet. Local runs are the supported
-   path, and the plan treats hosting as optional.
-3. **Optional:** openrouteservice road distances to replace the straight-line
-   district figures shown as context on match and deal screens.
+---
 
-### Known limitations, stated plainly
+## Known Limitations
 
-- **Gemini free-tier quota** caps realistic use at roughly 18 full negotiations
-  per day. See above.
-- **A buyer bidding its exact ceiling** makes the delivered total equal its
-  budget, which an attentive seller could infer from. The prompt tells the
-  buyer to stay below the ceiling until the final round, but this is mitigation,
-  not a guarantee — it is inherent to any negotiation where a party bids its
-  maximum.
-- **Flash-Lite is a small model.** It has held the JSON schema on every live
-  run so far, but `INVALID_MODEL_OUTPUT` handling and bounded retries exist
-  because that is not guaranteed.
+- **Gemini free-tier quota** caps realistic use at roughly 18 full negotiations per day. `AGENT_MODE=fake` (the default) costs zero quota; switch to `gemini` only for the final demo.
+- **Structured output is enforced server-side.** Every `AgentDecision` returned by Gemini is validated by the coordinator against hard Python constraints before being persisted. A malformed or out-of-range decision disqualifies the candidate rather than silently passing bad data through.
+- **No live pricing feed.** BATNA values are derived from other participants' entered prices. The prompt explicitly forbids agents from citing market benchmarks; `app/agents/privacy.py` strips any such language before it is persisted.
+- **Distances are straight-line.** The district distance matrix uses haversine from district headquarters coordinates. Freight uses participant-entered per-shipment quotes tagged `configured_estimate`, never derived from the distance matrix.

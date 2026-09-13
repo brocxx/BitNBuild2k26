@@ -103,6 +103,16 @@
             "title": "Created At",
             "type": "string"
           },
+          "esg_metrics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ESGMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -218,6 +228,160 @@
         "title": "DistrictRef",
         "type": "object"
       },
+      "ESGMetrics": {
+        "properties": {
+          "carbon_credits_estimated": {
+            "title": "Carbon Credits Estimated",
+            "type": "number"
+          },
+          "distance_km": {
+            "title": "Distance Km",
+            "type": "number"
+          },
+          "emission_factor_source": {
+            "title": "Emission Factor Source",
+            "type": "string"
+          },
+          "gross_co2e_avoided_kg": {
+            "title": "Gross Co2E Avoided Kg",
+            "type": "number"
+          },
+          "landfill_diverted_kg": {
+            "title": "Landfill Diverted Kg",
+            "type": "number"
+          },
+          "material_display_name": {
+            "title": "Material Display Name",
+            "type": "string"
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "net_co2e_avoided_kg": {
+            "title": "Net Co2E Avoided Kg",
+            "type": "number"
+          },
+          "quantity_kg": {
+            "title": "Quantity Kg",
+            "type": "number"
+          },
+          "replaces_virgin": {
+            "title": "Replaces Virgin",
+            "type": "string"
+          },
+          "transport_co2e_kg": {
+            "title": "Transport Co2E Kg",
+            "type": "number"
+          }
+        },
+        "required": [
+          "material_id",
+          "material_display_name",
+          "replaces_virgin",
+          "quantity_kg",
+          "distance_km",
+          "gross_co2e_avoided_kg",
+          "transport_co2e_kg",
+          "net_co2e_avoided_kg",
+          "landfill_diverted_kg",
+          "carbon_credits_estimated",
+          "emission_factor_source"
+        ],
+        "title": "ESGMetrics",
+        "type": "object"
+      },
+      "EnterpriseMapItem": {
+        "properties": {
+          "communication_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Communication Address"
+          },
+          "district": {
+            "title": "District",
+            "type": "string"
+          },
+          "enterprise_id": {
+            "title": "Enterprise Id",
+            "type": "string"
+          },
+          "enterprise_name": {
+            "title": "Enterprise Name",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "nic2_division": {
+            "title": "Nic2 Division",
+            "type": "integer"
+          },
+          "nic_description": {
+            "title": "Nic Description",
+            "type": "string"
+          },
+          "pincode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pincode"
+          }
+        },
+        "required": [
+          "enterprise_id",
+          "enterprise_name",
+          "district",
+          "lat",
+          "lon",
+          "nic2_division",
+          "nic_description"
+        ],
+        "title": "EnterpriseMapItem",
+        "type": "object"
+      },
+      "EnterprisesResponse": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EnterpriseMapItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "count",
+          "items"
+        ],
+        "title": "EnterprisesResponse",
+        "type": "object"
+      },
       "Event": {
         "properties": {
           "actor": {
@@ -319,6 +483,79 @@
         "title": "ExcludedListing",
         "type": "object"
       },
+      "GreenCertificate": {
+        "properties": {
+          "buyer": {
+            "$ref": "#/components/schemas/Business"
+          },
+          "certificate_id": {
+            "title": "Certificate Id",
+            "type": "string"
+          },
+          "deal_id": {
+            "title": "Deal Id",
+            "type": "string"
+          },
+          "esg_metrics": {
+            "$ref": "#/components/schemas/ESGMetrics"
+          },
+          "issuer": {
+            "title": "Issuer",
+            "type": "string"
+          },
+          "material_display_name": {
+            "title": "Material Display Name",
+            "type": "string"
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "methodology": {
+            "title": "Methodology",
+            "type": "string"
+          },
+          "quantity_kg": {
+            "description": "kilograms",
+            "minimum": 0.0,
+            "title": "Quantity Kg",
+            "type": "integer"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/Business"
+          },
+          "trade_date": {
+            "format": "date-time",
+            "title": "Trade Date",
+            "type": "string"
+          },
+          "transport_distance_km": {
+            "title": "Transport Distance Km",
+            "type": "number"
+          },
+          "verification_hash": {
+            "title": "Verification Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "certificate_id",
+          "issuer",
+          "deal_id",
+          "trade_date",
+          "seller",
+          "buyer",
+          "material_id",
+          "material_display_name",
+          "quantity_kg",
+          "transport_distance_km",
+          "esg_metrics",
+          "verification_hash",
+          "methodology"
+        ],
+        "title": "GreenCertificate",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -379,6 +616,15 @@
           "moisture_pct": {
             "title": "Moisture Pct",
             "type": "number"
+          },
+          "negotiation_strategy": {
+            "default": "conceder",
+            "enum": [
+              "conceder",
+              "boulware"
+            ],
+            "title": "Negotiation Strategy",
+            "type": "string"
           },
           "pickup_window": {
             "$ref": "#/components/schemas/Window"
@@ -448,6 +694,15 @@
             "minimum": 0.0,
             "title": "Moisture Pct",
             "type": "number"
+          },
+          "negotiation_strategy": {
+            "default": "conceder",
+            "enum": [
+              "conceder",
+              "boulware"
+            ],
+            "title": "Negotiation Strategy",
+            "type": "string"
           },
           "pickup_window": {
             "$ref": "#/components/schemas/Window"
@@ -569,6 +824,34 @@
           "district"
         ],
         "title": "Location",
+        "type": "object"
+      },
+      "MapStatsResponse": {
+        "properties": {
+          "active_trades": {
+            "title": "Active Trades",
+            "type": "integer"
+          },
+          "total_districts": {
+            "title": "Total Districts",
+            "type": "integer"
+          },
+          "total_enterprises": {
+            "title": "Total Enterprises",
+            "type": "integer"
+          },
+          "total_symbiosis_pathways": {
+            "title": "Total Symbiosis Pathways",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_enterprises",
+          "total_districts",
+          "total_symbiosis_pathways",
+          "active_trades"
+        ],
+        "title": "MapStatsResponse",
         "type": "object"
       },
       "MatchCandidate": {
@@ -881,6 +1164,11 @@
             "title": "Author",
             "type": "string"
           },
+          "chain_hash": {
+            "default": "",
+            "title": "Chain Hash",
+            "type": "string"
+          },
           "costs": {
             "$ref": "#/components/schemas/Costs"
           },
@@ -989,6 +1277,15 @@
             "title": "Moisture Pct",
             "type": "number"
           },
+          "negotiation_strategy": {
+            "default": "conceder",
+            "enum": [
+              "conceder",
+              "boulware"
+            ],
+            "title": "Negotiation Strategy",
+            "type": "string"
+          },
           "pickup_window": {
             "$ref": "#/components/schemas/Window"
           },
@@ -1054,6 +1351,15 @@
           "max_moisture_pct": {
             "title": "Max Moisture Pct",
             "type": "number"
+          },
+          "negotiation_strategy": {
+            "default": "conceder",
+            "enum": [
+              "conceder",
+              "boulware"
+            ],
+            "title": "Negotiation Strategy",
+            "type": "string"
           },
           "quantity_kg": {
             "description": "kilograms",
@@ -1314,6 +1620,15 @@
             "title": "Max Moisture Pct",
             "type": "number"
           },
+          "negotiation_strategy": {
+            "default": "conceder",
+            "enum": [
+              "conceder",
+              "boulware"
+            ],
+            "title": "Negotiation Strategy",
+            "type": "string"
+          },
           "quantity_kg": {
             "description": "kilograms",
             "exclusiveMinimum": 0.0,
@@ -1334,6 +1649,83 @@
           "buyer_max_total_paise"
         ],
         "title": "RequirementCreate",
+        "type": "object"
+      },
+      "SymbiosisMatch": {
+        "properties": {
+          "byproduct_name": {
+            "title": "Byproduct Name",
+            "type": "string"
+          },
+          "byproduct_type": {
+            "title": "Byproduct Type",
+            "type": "string"
+          },
+          "distance_km": {
+            "title": "Distance Km",
+            "type": "number"
+          },
+          "enterprise": {
+            "$ref": "#/components/schemas/EnterpriseMapItem"
+          },
+          "role": {
+            "enum": [
+              "producer",
+              "receiver"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "source_citation": {
+            "title": "Source Citation",
+            "type": "string"
+          },
+          "use_case": {
+            "title": "Use Case",
+            "type": "string"
+          }
+        },
+        "required": [
+          "enterprise",
+          "role",
+          "byproduct_name",
+          "byproduct_type",
+          "use_case",
+          "distance_km",
+          "source_citation"
+        ],
+        "title": "SymbiosisMatch",
+        "type": "object"
+      },
+      "SymbiosisResponse": {
+        "properties": {
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/SymbiosisMatch"
+            },
+            "title": "Matches",
+            "type": "array"
+          },
+          "query_district": {
+            "title": "Query District",
+            "type": "string"
+          },
+          "radius_km": {
+            "title": "Radius Km",
+            "type": "number"
+          },
+          "total_matches": {
+            "title": "Total Matches",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "query_district",
+          "radius_km",
+          "total_matches",
+          "matches"
+        ],
+        "title": "SymbiosisResponse",
         "type": "object"
       },
       "TransportOption": {
@@ -1631,6 +2023,53 @@
           }
         ],
         "summary": "Get Deal",
+        "tags": [
+          "deals"
+        ]
+      }
+    },
+    "/api/v1/deals/{deal_id}/certificate": {
+      "get": {
+        "operationId": "get_deal_certificate_api_v1_deals__deal_id__certificate_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GreenCertificate"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Get Deal Certificate",
         "tags": [
           "deals"
         ]
@@ -1962,6 +2401,206 @@
         "summary": "Update Listing",
         "tags": [
           "listings"
+        ]
+      }
+    },
+    "/api/v1/map/enterprises": {
+      "get": {
+        "operationId": "list_map_enterprises_api_v1_map_enterprises_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "district",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "District"
+            }
+          },
+          {
+            "in": "query",
+            "name": "nic2_division",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 99,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Nic2 Division"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "maximum": 8000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnterprisesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "List Map Enterprises",
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/stats": {
+      "get": {
+        "operationId": "map_stats_api_v1_map_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapStatsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Map Stats",
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/symbiosis": {
+      "get": {
+        "operationId": "discover_symbiosis_api_v1_map_symbiosis_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "district",
+            "required": false,
+            "schema": {
+              "default": "DAVANGERE",
+              "title": "District",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "radius_km",
+            "required": false,
+            "schema": {
+              "default": 150.0,
+              "maximum": 1000.0,
+              "minimum": 1.0,
+              "title": "Radius Km",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "nic2_division",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 99,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Nic2 Division"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 60,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SymbiosisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "summary": "Discover Symbiosis",
+        "tags": [
+          "map"
         ]
       }
     },

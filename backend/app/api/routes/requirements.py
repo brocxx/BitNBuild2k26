@@ -89,6 +89,7 @@ def create_requirement(
         location_precision=(
             location.precision if location else current.business.location_precision
         ),
+        negotiation_strategy=payload.negotiation_strategy,
         status="open",
     )
     if not current.business.is_buyer:

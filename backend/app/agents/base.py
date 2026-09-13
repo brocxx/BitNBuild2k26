@@ -82,6 +82,18 @@ class AgentContext:
     seller_floor_paise_per_tonne: int | None = None
     buyer_max_total_paise: int | None = None
 
+    # Game theory fields — set by the coordinator before every agent turn.
+    # strategy: which concession curve this side is using.
+    strategy: str = "conceder"  # "conceder" | "boulware"
+    # Pre-computed recommended price for this round (from zopa.concession_target).
+    concession_target_paise_per_tonne: int | None = None
+    # ZOPA: does a deal exist at all given both limits?
+    zopa_exists: bool | None = None
+    # BATNA: the buyer's best outside option (populated only on buyer turns).
+    batna_price_paise_per_tonne: int | None = None
+    batna_district: str | None = None
+    batna_listing_id: str | None = None
+
     @property
     def private_values(self) -> list[int]:
         return [
@@ -89,6 +101,7 @@ class AgentContext:
             for value in (self.seller_floor_paise_per_tonne, self.buyer_max_total_paise)
             if value is not None
         ]
+
 
 
 class AgentProvider(Protocol):

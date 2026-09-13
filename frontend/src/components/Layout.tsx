@@ -9,6 +9,7 @@ const NAV = [
   { to: "/listings", label: "My byproducts", icon: "◌" },
   { to: "/requirements", label: "Requirements", icon: "◎" },
   { to: "/opportunities", label: "Opportunity lab", icon: "✦" },
+  { to: "/map", label: "Symbiosis map", icon: "🗺" },
 ];
 
 export function Layout() {

@@ -25,6 +25,9 @@ import type {
   UpdateListingInput,
 } from "./types";
 import { DATASET_MATERIALS, DATASET_PATHWAYS } from "../data/datasetReference";
+import mapData from "../data/mapEnterprises.json";
+import { findCompatibleByDistrict } from "../utils/mapUtils";
+import type { MapEnterprise } from "./types";
 
 const now = () => new Date().toISOString();
 const inHours = (h: number) => new Date(Date.now() + h * 3600_000).toISOString();
@@ -97,6 +100,7 @@ let listings: OwnListing[] = [
     pickup_window: { start: inHours(24), end: inHours(96) },
     location: SELLER_KOLAR.location,
     status: "open",
+    negotiation_strategy: "conceder",
   },
   {
     id: "lst_002",
@@ -110,6 +114,7 @@ let listings: OwnListing[] = [
     pickup_window: { start: inHours(18), end: inHours(84) },
     location: SELLER_BLR_RURAL.location,
     status: "open",
+    negotiation_strategy: "conceder",
   },
   {
     id: "lst_003",
@@ -123,6 +128,7 @@ let listings: OwnListing[] = [
     pickup_window: { start: inHours(12), end: inHours(72) },
     location: SELLER_BLR_URBAN.location,
     status: "open",
+    negotiation_strategy: "conceder",
   },
 ];
 
@@ -154,6 +160,8 @@ let eventsByNegotiation: Record<string, Event[]> = {};
 let deals: Record<string, Deal> = {};
 let idempotencyStore: Record<string, { id: string; status: "queued" }> = {};
 
+const MAP_ENTERPRISES = mapData.enterprises as MapEnterprise[];
+
 function calcCosts(unitPricePaisePerTonne: number, quantityKg: number, freightPaise: number) {
   const material_paise = Math.round((unitPricePaisePerTonne * quantityKg) / 1000);
   return {
@@ -167,6 +175,23 @@ function calcCosts(unitPricePaisePerTonne: number, quantityKg: number, freightPa
 function paginate<T>(items: T[]): Paginated<T> {
   return { items, next_cursor: null };
 }
+
+deals.deal_demo_corridor = {
+  id: "deal_demo_corridor",
+  negotiation_id: "neg_demo",
+  requirement_id: "req_demo",
+  listing_id: "lst_001",
+  seller: SELLER_KOLAR,
+  buyer: ME,
+  material_id: "rice_husk",
+  intended_use: "brick_kiln_fuel",
+  quantity_kg: 2800,
+  unit_price_paise_per_tonne: 260000,
+  costs: calcCosts(260000, 2800, 61000),
+  transport_option: transportOptions[0],
+  status: "agreed",
+  created_at: now(),
+};
 
 // Simulates the buyer/seller/broker negotiation with a couple of scripted
 // rounds so the polling UI has real state transitions to render.
@@ -276,7 +301,13 @@ export const mockClient: ApiClient = {
     return paginate(listings.filter((l) => l.seller.id === ME.id));
   },
   async createListing(input: CreateListingInput) {
-    const created: OwnListing = { ...input, id: uid("lst"), seller: ME, status: "open" };
+    const created: OwnListing = {
+      ...input,
+      id: uid("lst"),
+      seller: ME,
+      status: "open",
+      negotiation_strategy: input.negotiation_strategy ?? "conceder",
+    };
     listings = [...listings, created];
     return created;
   },
@@ -291,7 +322,13 @@ export const mockClient: ApiClient = {
     return paginate(requirements.filter((r) => r.buyer.id === ME.id));
   },
   async createRequirement(input: CreateRequirementInput) {
-    const created: OwnRequirement = { ...input, id: uid("req"), buyer: ME, status: "open" };
+    const created: OwnRequirement = {
+      ...input,
+      id: uid("req"),
+      buyer: ME,
+      status: "open",
+      negotiation_strategy: input.negotiation_strategy ?? "conceder",
+    };
     requirements = [...requirements, created];
     return created;
   },
@@ -397,5 +434,55 @@ export const mockClient: ApiClient = {
     if (!found) throw new Error("Deal not found");
     found.status = status;
     return found;
+  },
+  async getDealCertificate(id: string) {
+    const found = deals[id];
+    if (!found) throw new Error("Deal not found");
+    return {
+      certificate_id: `CERT-KIB-${found.id.slice(0, 8).toUpperCase()}-2026`,
+      issuer: "Karnataka Industrial Byproduct Exchange (KIB) & Circular Economy Authority",
+      deal_id: found.id,
+      trade_date: found.created_at,
+      seller: found.seller,
+      buyer: found.buyer,
+      material_id: found.material_id,
+      material_display_name: found.material_id.replace("_", " ").toUpperCase(),
+      quantity_kg: found.quantity_kg,
+      transport_distance_km: (found.transport_option.distance_m || 150000) / 1000,
+      esg_metrics: {
+        material_id: found.material_id,
+        material_display_name: found.material_id.replace("_", " "),
+        replaces_virgin: "sub-bituminous coal",
+        quantity_kg: found.quantity_kg,
+        distance_km: (found.transport_option.distance_m || 150000) / 1000,
+        gross_co2e_avoided_kg: (found.quantity_kg / 1000) * 1400,
+        transport_co2e_kg: (found.quantity_kg / 1000) * ((found.transport_option.distance_m || 150000) / 1000) * 0.062,
+        net_co2e_avoided_kg: (found.quantity_kg / 1000) * 1400 - (found.quantity_kg / 1000) * ((found.transport_option.distance_m || 150000) / 1000) * 0.062,
+        landfill_diverted_kg: found.quantity_kg,
+        carbon_credits_estimated: ((found.quantity_kg / 1000) * 1400) / 1000,
+        emission_factor_source: "IPCC 2006 Guidelines Table 2.4",
+      },
+      verification_hash: "e8fac94d0a2a3a7a2770619ec05afbcf2bdc4721b84c297b112b6937ce9c0fd2",
+      methodology: "IPCC 2006 Guidelines for National Greenhouse Gas Inventories & MoRTH India Freight Factor 2022",
+    };
+  },
+
+
+  async getMapEnterprises() {
+    return { enterprises: MAP_ENTERPRISES };
+  },
+
+  async getSymbiosisNeighbors(district: string, radiusKm = 150) {
+    const inDistrict = MAP_ENTERPRISES.filter((e) => e.district === district);
+    const avgLat =
+      inDistrict.reduce((sum, e) => sum + e.lat, 0) / Math.max(inDistrict.length, 1);
+    const avgLon =
+      inDistrict.reduce((sum, e) => sum + e.lon, 0) / Math.max(inDistrict.length, 1);
+    const compatible = findCompatibleByDistrict(district, MAP_ENTERPRISES, radiusKm);
+    return {
+      origin: { district, lat: avgLat, lon: avgLon },
+      radius_km: radiusKm,
+      compatible_enterprises: compatible,
+    };
   },
 };

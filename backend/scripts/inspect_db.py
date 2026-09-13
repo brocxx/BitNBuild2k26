@@ -364,6 +364,16 @@ def check(db) -> int:
             f"prices and could not be checked: {sorted(ambiguous)}"
         )
 
+    # The SHA-256 audit chain must recompute from the stored rows alone.
+    from app.services.coordinator import verify_offer_chain
+
+    for negotiation in db.scalars(select(models.Negotiation)):
+        intact, detail = verify_offer_chain(db, negotiation.id)
+        assert_(
+            intact,
+            f"negotiation {negotiation.id[:8]}: offer audit chain intact ({detail})",
+        )
+
     # Event sequences are unique and ascending per negotiation.
     for negotiation in db.scalars(select(models.Negotiation)):
         seqs = [
