@@ -4,29 +4,40 @@ import { useAuth } from "../auth/AuthContext";
 import { API_MODE } from "../api";
 import { supabase } from "../auth/supabase";
 
+// Districts and company names deliberately are NOT listed here. Which real
+// enterprise each demo account maps to is decided by the backend seed from the
+// UDYAM dataset, so anything written here drifts the moment the seed or the
+// dataset changes. The quantities and prices below come from fixed values in
+// the seed and are stable. The signed-in business is shown on the dashboard.
 const DEMO_PERSONAS = [
   {
-    role: "Buyer 1 (Brick Kiln - Kolar)",
+    role: "Buyer 1 — brick kiln",
     email: "buyer1@demo.bitnbuild.local",
-    desc: "Has active Rice Husk requirement with budget",
+    desc: "Sourcing 20 t rice husk as kiln fuel",
     icon: "🧱",
   },
   {
-    role: "Seller 1 (Rice Mill - Nearest)",
+    role: "Seller 1 — rice mill",
     email: "seller1@demo.bitnbuild.local",
-    desc: "Lists 60 tonnes Rice Husk @ ₹3,050/t (Kolar)",
+    desc: "Lists 60 t rice husk @ ₹3,050/t",
     icon: "🌾",
   },
   {
-    role: "Seller 2 (Rice Mill - Mid-range)",
+    role: "Seller 2 — rice mill",
     email: "seller2@demo.bitnbuild.local",
-    desc: "Lists 45 tonnes Rice Husk @ ₹2,620/t",
+    desc: "Lists 45 t rice husk @ ₹2,620/t",
     icon: "🌾",
   },
   {
-    role: "Buyer 2 (Sawmill Boiler)",
+    role: "Seller 3 — rice mill",
+    email: "seller3@demo.bitnbuild.local",
+    desc: "Lists 40 t rice husk @ ₹2,750/t",
+    icon: "🌾",
+  },
+  {
+    role: "Buyer 2 — sawmill boiler",
     email: "buyer2@demo.bitnbuild.local",
-    desc: "Timber drying boiler secondary fuel buyer",
+    desc: "Sourcing 15 t rice husk for timber drying",
     icon: "🌲",
   },
 ];
@@ -66,9 +77,9 @@ export function Login() {
         <p className="auth-card__hint">
           {API_MODE === "real"
             ? supabase
-              ? "Connected to Supabase. Sign in with your registered account."
-              : "Connected to Local FastAPI Backend. Select a seeded demo account below or enter an address."
-            : "Mock Mode — Any credentials will sign you in with mock fixtures."}
+              ? "Sign in with your registered account."
+              : "Choose a demo account below, or enter your email address."
+            : "Demo preview with sample data. Any details will sign you in."}
         </p>
 
         <div className="persona-grid" style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1.25rem" }}>

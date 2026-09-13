@@ -91,6 +91,12 @@ LISTING_PLANS: list[ListingPlan] = [
 FEASIBLE_BUDGET_PAISE = 7_000_000
 INFEASIBLE_BUDGET_PAISE = 5_000_000
 
+# The sawmill buyer takes the same material down the second documented pathway
+# (rice husk as boiler fuel for timber drying) at a smaller volume. Without a
+# requirement of its own, logging in as buyer2 showed an empty Matches screen.
+SAWMILL_QUANTITY_KG = 15_000
+SAWMILL_BUDGET_PAISE = 6_000_000
+
 
 @dataclass
 class SeedReport:
@@ -334,9 +340,24 @@ def seed_demo(db: Session, now: datetime | None = None) -> SeedReport:
         location_precision="district",
         status="open",
     )
-    db.add_all([feasible, infeasible])
+    sawmill_requirement = models.Requirement(
+        buyer_business_id=sawmill.id,
+        material_id="rice_husk",
+        receiving_process_id="timber_drying_boiler_fuel",
+        quantity_kg=SAWMILL_QUANTITY_KG,
+        max_moisture_pct=15.0,
+        delivery_start=now + timedelta(days=4),
+        delivery_end=now + timedelta(days=16),
+        buyer_max_total_paise=SAWMILL_BUDGET_PAISE,
+        district=sawmill.district,
+        lat=sawmill.lat,
+        lon=sawmill.lon,
+        location_precision="district",
+        status="open",
+    )
+    db.add_all([feasible, infeasible, sawmill_requirement])
     db.flush()
-    report.requirements = 2
+    report.requirements = 3
 
     for business, index in ((kiln, 1), (sawmill, 2)):
         email = f"buyer{index}@{DEMO_DOMAIN}"
@@ -345,9 +366,18 @@ def seed_demo(db: Session, now: datetime | None = None) -> SeedReport:
         report.logins.append(email)
 
     # -- transport options -------------------------------------------------
+    buyer_district = {
+        feasible.id: kiln.district,
+        infeasible.id: kiln.district,
+        sawmill_requirement.id: sawmill.district,
+    }
     for listing, plan in zip(listings, LISTING_PLANS, strict=False):
-        distance_m = _distance_m(db, listing.district, kiln.district)
-        for requirement in (feasible, infeasible):
+        for requirement in (feasible, infeasible, sawmill_requirement):
+            # Distance is to this requirement's own buyer, shown as context
+            # only - it never determines the freight charge.
+            distance_m = _distance_m(
+                db, listing.district, buyer_district[requirement.id]
+            )
             db.add(
                 models.TransportOption(
                     listing_id=listing.id,
