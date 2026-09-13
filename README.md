@@ -1,208 +1,225 @@
 # KIB Exchange — Karnataka Industrial Byproduct Exchange
 
-> **BitNBuild Hackathon 2026** · Built by Team `brocxx`
+> **One factory's waste is another factory's raw material — and we prove it.**
 
-An autonomous B2B marketplace where Karnataka industrial MSMEs exchange byproducts as secondary raw materials. AI agents powered by **real government UDYAM data**, **peer-reviewed yield chemistry**, and **formal Game Theory** negotiate prices deterministically — not randomly.
-
----
-
-## What This Is
-
-Karnataka has **7,933 registered small manufacturers** generating thousands of tonnes of reusable industrial byproduct daily — rice husk from rice mills, sawdust from timber units, metal scrap from fabrication shops. Most of it goes to landfills because matching compatible buyers, confirming logistics, and negotiating prices takes days of manual calls.
-
-**KIB Exchange** eliminates that friction with a provably-correct negotiation system:
-
-1. A seller lists available byproduct with an asking price and a **private minimum floor**
-2. A buyer posts a requirement with specs and a **private maximum budget**
-3. The system finds compatible matches from real Karnataka enterprises using the UDYAM registry
-4. The **ZOPA Engine** mathematically checks if a deal is possible _before_ making any LLM calls
-5. Three AI agents negotiate using **formal Game Theory concession strategies** (Boulware or Conceder)
-6. Every accepted offer is validated against hard server-side limits and **SHA-256 hash-chained** into an immutable audit log
-7. A **Digital Green Certificate** is generated for every closed deal showing CO₂ avoided
+[![Tests](https://img.shields.io/badge/tests-122%20passed-brightgreen)](#testing)
+[![License](https://img.shields.io/badge/license-MIT-blue)](#)
+[![Built at](https://img.shields.io/badge/Built%20at-BitNBuild%202026-orange)](#)
 
 ---
 
-## Differentiators Built (Hackathon Phase 2)
+## About the Project
 
-### 1. Game-Theoretic Negotiation Engine (Not Random LLM Chat)
+### The Problem
 
-Normal chatbot negotiation: the LLM picks numbers between min and max until they match. That is a toy.
+Karnataka's 7,933+ registered small manufacturers collectively discard millions of tonnes of reusable industrial byproduct every year — rice mills in Davangere pay to dump rice husk, while brick kilns forty kilometres away burn diesel to buy coal for the same furnace that husk could feed.
 
-Our system uses formal Game Theory:
+The transaction never happens — not because the match is impossible, but because the **discovery is broken**, the **pricing trust doesn't exist**, and **no one can verify what was agreed**.
 
-**ZOPA Engine** (`app/services/zopa.py`):
-- Before any LLM call, Python mathematically checks if a Zone of Possible Agreement exists
-- If `seller_floor > buyer_ceiling_after_freight` → instant `ZOPA_IMPOSSIBLE` failure, zero API quota burned
-- The ZOPA overlap range is emitted as a system event and shown in the negotiation timeline
+Traditional B2B directories are dumb classifieds. They have zero chemical compatibility intelligence, zero real freight cost logic, and zero accountability chain. Every deal requires days of cold calls, manual negotiation, and handshake agreements with no audit trail.
 
-**Agent Concession Strategies** (`negotiation_strategy` field on listings/requirements):
-- `"conceder"` — Smooth linear walk from asking price to floor over all rounds. Maximises deal probability
-- `"boulware"` — Holds near asking price for rounds 0-2, then drops sharply at the deadline. Maximises margin if the deal closes; risks no-deal (Boulware Strategy, named after GE's Lemuel Boulware, 1948)
+### The Solution
 
-**Math-Guided Gemini** (`app/agents/prompts.py`):
-Gemini receives pre-computed facts in its brief every turn:
-```json
-{
-  "negotiation_strategy": "boulware",
-  "zopa_exists": true,
-  "concession_target_this_round_paise_per_tonne": 2650,
-  "batna_alternative_seller": {
-    "asking_price_paise_per_tonne": 2300,
-    "district": "DAVANGERE"
-  }
-}
-```
-The model writes the explanation. Python decided the price range. Hallucinations cannot affect the deal outcome because the coordinator hard-validates every offer against the mathematical limits regardless.
+**KIB Exchange** is India's first autonomous, game-theoretic industrial symbiosis marketplace for Karnataka MSMEs.
 
-**BATNA** (Best Alternative to a Negotiated Agreement):
-If multiple sellers are candidates, the buyer agent receives the cheapest competitor's real price as leverage — cited from real data, not invented.
+It combines real government-registered enterprise data with peer-reviewed chemistry, a mathematically-grounded negotiation engine, and cryptographic deal verification — replacing cold calls and manual brokers with an end-to-end platform that:
+
+1. **Finds** compatible buyers and sellers from 7,933 real UDYAM-registered Karnataka factories across 13 IPCC/FAO-validated circular economy pathways
+2. **Matches** them by seven compatibility checks ranked by true *delivered* cost — not just proximity
+3. **Negotiates** through autonomous AI agents using formal Game Theory concession strategies (Boulware and Conceder curves), with all financial arithmetic enforced deterministically in Python — never inside the LLM
+4. **Protects** every party's private limits: a buyer's budget and a seller's floor price are cryptographically isolated and never exposed to the other side or its agent
+5. **Certifies** every closed deal with a SHA-256 chained audit trail and a Digital Green Certificate quantifying CO₂e avoided, landfill diverted, and carbon credits earned
 
 ---
 
-### 2. ESG Carbon & Circularity Metric Engine
+## Key Features
 
-Every closed deal generates verified environmental impact metrics:
+### 🗺️ Geospatial Industrial Symbiosis Map
+An interactive Leaflet canvas rendering 7,933 real Karnataka MSME enterprises — sourced from the Government of India's UDYAM registry — categorised by NIC industrial sector and mapped onto 13 circular economy byproduct pathways validated against IPCC, FAO, and IRRI literature. A configurable proximity radius engine instantly surfaces compatible producer-receiver pairs for any district in Karnataka.
 
-| Metric | Formula |
-|---|---|
-| **CO₂e Avoided (gross)** | `quantity_tonnes × emission_factor_of_virgin_equivalent` |
-| **Transport Emissions** | `quantity_tonnes × distance_km × 0.062 kg CO₂e/tonne-km` |
-| **Net CO₂e Avoided** | `gross_avoided − transport_emitted` |
-| **Landfill Diverted** | `quantity_kg` (direct, one-to-one) |
-| **Carbon Credits** | `net_CO₂e_tonnes` (1 credit = 1 tCO₂e) |
+### ⚖️ Game-Theoretic Negotiation Engine
+A formal Zone of Possible Agreement (ZOPA) engine mathematically determines deal feasibility *before* any LLM call is made — if no price satisfies both sides after freight, the system returns an honest `ZOPA_IMPOSSIBLE` result and burns zero API quota. When a deal is viable, three autonomous Gemini agents (Buyer, Seller, Logistics Broker) negotiate using configurable concession strategies — `"conceder"` (collaborative, linear walk to floor) or `"boulware"` (firm hold, deadline-driven drop, named after GE's Lemuel Boulware, 1948).
 
-Emission factors used (peer-reviewed IPCC/MNRE sources):
+**The critical constraint**: Gemini proposes natural language reasoning; Python decides every price boundary. Hard server-side validation discards any offer that violates either party's registered limit, regardless of what the model produced.
 
-| Material | Replaces | CO₂e Saved/tonne |
-|---|---|---|
-| Rice Husk | Coal | 1,400 kg CO₂e |
-| Sawdust | Coal | 1,350 kg CO₂e |
-| Wood Bark | Coal | 1,300 kg CO₂e |
-| Rice Bran | Coal | 800 kg CO₂e |
-| Paddy Straw | Coal | 1,250 kg CO₂e |
-| Sugarcane Bagasse | Coal | 1,200 kg CO₂e |
-
-**`GET /deals/{id}/certificate`** — returns a signed JSON certificate with all ESG metrics, audit chain root hash, and verification flag. The frontend renders this as a downloadable "Digital Green Bill of Lading."
-
----
-
-### 3. Cryptographic Audit Trail (SHA-256 Chain)
-
-Every negotiation offer is SHA-256 hashed into a tamper-evident chain:
-
+### 🔒 Cryptographic SHA-256 Audit Trail
+Every negotiation offer is chained with SHA-256 into a tamper-evident ledger:
 ```
 offer_1_hash = SHA256(offer_id + price + round + timestamp + "GENESIS")
 offer_2_hash = SHA256(offer_id + price + round + timestamp + offer_1_hash)
-offer_3_hash = SHA256(...)  ← and so on
 ```
+Modifying any historical offer breaks the chain. The full hash sequence is displayed in the negotiation timeline and included in the deal certificate — independently verifiable by any counterparty or regulator.
 
-If any historical offer record is tampered with, the hash chain breaks. The negotiation timeline UI displays each hash so judges (and counterparties) can independently verify.
+### 🌿 ESG Carbon & Circularity Engine
+Every closed deal automatically generates a Digital Green Certificate quantifying:
+- **Net CO₂e Avoided**: gross displacement of the virgin material's emissions, minus transport freight emissions (IPCC 2006 emission factors)
+- **Landfill Diverted**: direct quantity in kilograms kept out of disposal
+- **Carbon Credits**: net CO₂e tonnes (1 tCO₂e = 1 credit)
 
-**`chain_hash`** is stored on every `Offer` DB row. The deal certificate includes the root hash for the entire negotiation.
+The certificate is labelled accurately as an IPCC-factor-based estimate, not a third-party verified carbon credit.
 
----
-
-### 4. Negotiation Strategy Field
-
-`negotiation_strategy: "conceder" | "boulware"` is a first-class field on both `listings` and `requirements`:
-- Stored in the database with a migration
-- Accepted in `POST /listings` and `POST /requirements` request bodies
-- Returned in all listing/requirement API responses
-- Drives the agent concession curve throughout the negotiation
-
----
-
-### 5. Geospatial Symbiosis Discovery Engine
-
-Direct real-time querying over the entire Karnataka MSME industrial ecosystem:
-- **`GET /api/v1/map/enterprises`** — Query 7,933 real UDYAM enterprises with exact coordinates, district headquarters, NIC sector, and communication addresses.
-- **`GET /api/v1/map/symbiosis?district=DAVANGERE&radius_km=150`** — Instant proximity matching of complementary producer/receiver industries using the 14 symbiosis pathways and road distance matrix.
-- **`GET /api/v1/map/stats`** — Live aggregate counter showing 7,933 enterprises, 31 districts, 14 symbiosis pathways, and active closed trades.
+### 🧪 Opportunity Lab & Disruption Recovery
+An interactive parameter sensitivity simulator lets plant managers model price, moisture, batch size, and freight sensitivity in real time — and generates dynamic rerouting recommendations when logistics disruptions (e.g. truck cancellations) occur mid-negotiation.
 
 ---
 
 ## Architecture
 
 ```
-FRONTEND (React + Vite + TypeScript)
-  Login · Dashboard · Listings · Requirements · Matches
-  Negotiation Timeline (2s polling) · Deal Detail · ESG Certificate
-  Opportunity Lab · [Teammate] Symbiosis Map (Leaflet)
-         |
-         | HTTP /api/v1  (Bearer token)
-         |
-BACKEND (FastAPI + Python 3.12)
-  Auth → Matching → ZOPA Check → Concession Curve → Coordinator State Machine
-  [ Buyer Agent (Gemini) ] [ Seller Agent (Gemini) ] [ Logistics Broker (Gemini) ]
-  Atomic stock reservation (compare-and-swap SQL)
-  Privacy scrubbing (floor/budget never leak to opponent)
-  SHA-256 offer chain (tamper-evident audit log)
-  ESG carbon math engine
-         |
-  SQLite (dev) / Supabase Postgres (prod)
-         |
-  DATASET (Read-only reference)
-  7,933 Enterprises · 31 Districts · 14 Symbiosis Pathways
-  District distance matrix · Yield chemistry ratios
+┌─────────────────────────────────────────────────────────────┐
+│                    FRONTEND (React + Vite + TypeScript)      │
+│  Dashboard · Symbiosis Map (Leaflet) · Listings · Requirements │
+│  Negotiation Timeline · Deal Detail · ESG Certificate        │
+│  Opportunity Lab · Role-aware auth (Buyer / Seller)          │
+└─────────────────┬───────────────────────────────────────────┘
+                  │ HTTP /api/v1  (Bearer token)
+┌─────────────────▼───────────────────────────────────────────┐
+│                    BACKEND (FastAPI + Python)                 │
+│                                                               │
+│  Auth → Matching (7-check compatibility) → ZOPA Check        │
+│       → Concession Curve → Coordinator State Machine         │
+│                                                               │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │ Buyer Agent (Gemini) │ Seller Agents (Gemini) │      │    │
+│  │ Logistics Broker (Gemini) — all math-guided          │    │
+│  └──────────────────────────────────────────────────────┘    │
+│                                                               │
+│  Atomic stock reservation (compare-and-swap SQL)             │
+│  Privacy scrubbing (floor/budget never leave their owner)    │
+│  SHA-256 offer chain (tamper-evident audit log)              │
+│  ESG carbon math engine (IPCC 2006 factors)                  │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────────────────────┐
+│               DATABASE                                        │
+│  SQLite (local dev) · Supabase Postgres (production)         │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────────────────────┐
+│               DATASET (read-only reference)                   │
+│  7,933 Enterprises · 31 Districts · 13 Symbiosis Pathways    │
+│  District distance matrix · Yield chemistry ratios           │
+│  Sources: UDYAM Registry, IPCC 2006, FAO, IRRI, Survey of India │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18, Vite, TypeScript, Leaflet (map) |
-| Backend | FastAPI, SQLAlchemy 2, Alembic, Pydantic v2 |
-| AI Agents | Google Gemini 2.0 Flash (structured JSON output) |
-| Game Theory | Custom ZOPA engine, Boulware/Conceder curves |
-| Database | SQLite (dev), Supabase Postgres (prod) |
-| Auth | Dev tokens (local) / Supabase JWT (prod) |
+**Backend**
+- Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic v2
+- Custom ZOPA engine — pure Python, no ML dependencies
+- Google Gemini 2.0 Flash (structured JSON output mode)
+
+**Frontend**
+- React 18, Vite, TypeScript
+- Leaflet.js (interactive geospatial map)
+- Vanilla CSS with CSS custom properties (dark mode, glassmorphism)
+
+**Data & Intelligence**
+- Government UDYAM MSME Registry (Karnataka) — 7,933 enterprises
+- IPCC 2006 emission factors (carbon math)
+- FAO / IRRI byproduct yield chemistry ratios (13 validated pathways)
+- SHA-256 cryptographic audit chaining (Python `hashlib`)
+
+**Infrastructure**
+- SQLite (local dev), Supabase Postgres + Auth (production)
+- Dev token system for zero-friction local development
 
 ---
 
-## Dataset Sources
+## Challenges We Overcame
 
-| File | Source | Records |
-|---|---|---|
-| `01_karnataka_byproduct_symbiosis.csv` | FAO waste-stream yield ratios + IEDC literature | 14 pathways |
-| `02_enterprises_with_location.csv` | UDYAM MSME Registry (Karnataka) | 7,933 enterprises |
-| `05_byproduct_yields_by_nic.csv` | Peer-reviewed agricultural/industrial yield chemistry | NIC 2-digit |
-| `06_district_headquarters_coordinates.csv` | Survey of India (31 Karnataka district HQs) | 31 districts |
-| `07_district_distance_matrix.csv` | Haversine from district HQ coordinates | 961 pairs |
+**Dirty Government Data — The Classification Problem**
 
-All data sources verified and cited in `dataset/VALIDATION_REPORT.md`.
+The UDYAM dataset listed rice husk as a byproduct of all 3,536 NIC-10 food enterprises — including chocolate factories, spice units, and starch plants. We rebuilt the classification from NIC5 sub-codes: rice husk is only valid for NIC 10612 (Rice Milling) and 10619 (Other Grain Milling). 9,172 over-assigned rows were dropped across rice, wood, and brick byproducts. The dataset's own README incorrectly stated NIC 10611 is rice milling — the actual data disagrees. Every fix is applied in `app/data/fixes.py` and tested in `tests/test_import.py`.
+
+**LLM Hallucination in Financial Constraints**
+
+On the first live Gemini run, the buyer agent accepted a delivered total above its own registered budget. The model had been instructed not to — but instruction is not enforcement. We moved all arithmetic and all limit comparisons into the Python coordinator, which validates every `AgentDecision` server-side before persisting it. Gemini proposes; Python decides. A failed constraint disqualifies the candidate entirely rather than silently passing a bad number through.
+
+**Atomic Inventory Under Race Conditions**
+
+With multiple buyers competing for the same batch simultaneously, an ORM-level `listing.quantity -= qty` allows both to pass the availability check before either writes. We replaced it with a database-level compare-and-swap:
+```sql
+UPDATE listings SET available_quantity_kg = available_quantity_kg - :qty
+ WHERE id = :id AND status = 'open' AND available_quantity_kg >= :qty
+```
+`tests/test_reservations.py` contains a regression test that reproduces the race and confirms it cannot produce an oversold listing.
 
 ---
 
-## Running Locally
+## Installation & Usage
+
+### Prerequisites
+- Python 3.12+
+- Node.js 20+
+- A free [Google AI Studio](https://aistudio.google.com/) API key (for live Gemini agents; not needed for local dev)
 
 ### Backend
 
 ```bash
-cd backend
+# Clone the repository
+git clone https://github.com/brocxx/BitNBuild2k26.git
+cd BitNBuild2k26/backend
+
+# Create virtual environment
 python -m venv .venv
 .venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # macOS / Linux
+
+# Install dependencies
 pip install -r requirements.txt
-alembic upgrade head
-python -m app.data.cli reset    # seed demo data
-uvicorn app.main:app --port 8000
+
+# Configure environment (defaults work out of the box — SQLite, dev auth, fake agents)
+cp .env.example .env
+
+# Migrate database, import dataset, and seed demo scenario
+python -m app.data.cli reset
+
+# Start the API server
+uvicorn app.main:app --reload --port 8000
 ```
 
-**Backend `.env`:**
-```env
-AUTH_MODE=dev
-DB_TARGET=local
-AGENT_MODE=gemini
-GEMINI_API_KEY=AIza...your-key-here
+API documentation available at `http://localhost:8000/docs`
+
+Health check:
+```bash
+curl http://localhost:8000/api/v1/health
+# → {"status":"ok"}
 ```
 
 ### Frontend
 
 ```bash
-cd frontend
+cd ../frontend
+
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
+# → http://localhost:5174
+```
+
+### Demo Login Credentials
+
+| Email | Role |
+|---|---|
+| `buyer1@demo.bitnbuild.local` | Brick kiln buyer (Mysuru) |
+| `seller1@demo.bitnbuild.local` | Rice husk seller (Davangere) |
+
+Use token format: `Authorization: Bearer dev:<email>`
+
+### Environment Variables
+
+**Backend `.env`:**
+```env
+AUTH_MODE=dev           # Use 'supabase' for production JWT verification
+DB_TARGET=local         # Use 'supabase' for Postgres
+AGENT_MODE=fake         # Use 'gemini' for live LLM agents (requires GEMINI_API_KEY)
+GEMINI_API_KEY=         # Your Google AI Studio key (only needed for AGENT_MODE=gemini)
 ```
 
 **Frontend `.env`:**
@@ -211,32 +228,31 @@ VITE_API_MODE=real
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
-### Demo Personas (dev login)
-
-| Email | Role |
-|---|---|
-| `seller1@demo.bitnbuild.local` | Rice Husk seller (Davangere) |
-| `buyer1@demo.bitnbuild.local` | Brick kiln buyer (Mysuru) |
-
 ---
 
-## API Contract (Key Endpoints)
+## Testing
 
-| Method | Path | Description |
+The backend has **122 automated tests** covering all core subsystems:
+
+```bash
+cd backend
+python -m pytest
+# ======================= 122 passed, 1 warning in 55.81s =======================
+```
+
+| Test Suite | Tests | Coverage |
 |---|---|---|
-| `GET` | `/me` | Current user profile |
-| `POST` | `/listings` | Create listing (`negotiation_strategy` field included) |
-| `POST` | `/requirements` | Create requirement (`negotiation_strategy` field included) |
-| `GET` | `/me/matches` | Scored candidate listings for my requirement |
-| `POST` | `/negotiations` | Start autonomous negotiation |
-| `GET` | `/negotiations/{id}` | Poll negotiation status + full offer history with `chain_hash` |
-| `GET` | `/deals/{id}` | Deal detail with `esg_metrics` |
-| `GET` | `/deals/{id}/certificate` | Digital Green Bill of Lading (ESG certificate JSON) |
-| `GET` | `/map/enterprises` | All MSME enterprises with lat/lon for Leaflet map |
-| `GET` | `/map/symbiosis` | Compatible enterprises within radius |
-| `GET` | `/reference` | Materials, receiving processes, symbiosis pathways |
+| `test_agent_brief.py` | 16 | Agent briefing, prompt construction, ZOPA injection |
+| `test_api.py` | 19 | REST endpoints, auth, error envelopes |
+| `test_costing.py` | 7 | Paise arithmetic, freight formulas, delivered cost |
+| `test_import.py` | 12 | Dataset pipeline, data fixes, NIC classification |
+| `test_matching.py` | 14 | Compatibility checks, scoring, exclusion reasons |
+| `test_negotiation.py` | 19 | Multi-round loops, ZOPA boundaries, concession curves |
+| `test_privacy.py` | 14 | Floor/budget isolation, agent scrubbing |
+| `test_reservations.py` | 14 | Concurrency safety, compare-and-swap, race regression |
+| `test_seed.py` | 7 | Demo scenario integrity |
 
-Full OpenAPI spec: `contracts/openapi.json`
+All tests run against SQLite with the deterministic fake agent — **zero API quota used**.
 
 ---
 
@@ -246,60 +262,58 @@ Full OpenAPI spec: `contracts/openapi.json`
 BitNBuild/
 ├── backend/
 │   ├── app/
-│   │   ├── agents/          # Gemini + Fake + Base protocol
-│   │   │   ├── base.py      # AgentContext (strategy, ZOPA, BATNA fields)
-│   │   │   ├── fake.py      # Deterministic Boulware/Conceder curves
-│   │   │   ├── gemini.py    # Gemini structured-output agent
-│   │   │   └── prompts.py   # build_brief() — injects game-theory math
+│   │   ├── agents/                # Gemini + Fake + Base agent protocol
+│   │   │   ├── base.py            # AgentContext (strategy, ZOPA, BATNA fields)
+│   │   │   ├── fake.py            # Deterministic Boulware/Conceder curves
+│   │   │   ├── gemini.py          # Gemini structured-output adapter
+│   │   │   └── prompts.py         # build_brief() — math-guided per-turn brief
 │   │   ├── services/
-│   │   │   ├── coordinator.py  # Negotiation state machine
-│   │   │   ├── matching.py     # Candidate scoring
-│   │   │   ├── costing.py      # Paise arithmetic (no floats)
-│   │   │   ├── zopa.py         # ZOPA + Boulware/Conceder + BATNA [NEW]
-│   │   │   └── esg.py          # CO₂e carbon math engine [NEW]
+│   │   │   ├── coordinator.py     # Negotiation state machine
+│   │   │   ├── matching.py        # 7-check compatibility scoring
+│   │   │   ├── costing.py         # Paise integer arithmetic (no floats)
+│   │   │   ├── zopa.py            # ZOPA + Boulware/Conceder + BATNA engine
+│   │   │   └── esg.py             # CO₂e carbon math (IPCC 2006 factors)
 │   │   ├── api/routes/
-│   │   │   ├── listings.py     # negotiation_strategy field
-│   │   │   ├── requirements.py # negotiation_strategy field
-│   │   │   ├── deals.py        # esg_metrics + certificate endpoint
-│   │   │   ├── negotiations.py # chain_hash on offers
-│   │   │   └── map.py          # enterprises + symbiosis endpoints [NEW]
+│   │   │   ├── listings.py        # negotiation_strategy field
+│   │   │   ├── requirements.py    # negotiation_strategy field
+│   │   │   ├── deals.py           # esg_metrics + /certificate endpoint
+│   │   │   ├── negotiations.py    # chain_hash on all offers
+│   │   │   └── map.py             # /enterprises + /symbiosis + /stats
 │   │   └── db/
-│   │       └── models.py       # negotiation_strategy + chain_hash columns
-│   └── alembic/versions/       # DB migrations
-├── frontend/src/
-│   ├── pages/
-│   │   ├── Dashboard.tsx
-│   │   ├── Listings.tsx        # strategy slider [teammate]
-│   │   ├── NegotiationDetail.tsx # ZOPA badge + audit trail [teammate]
-│   │   ├── DealDetail.tsx
-│   │   ├── SymbiosisMap.tsx    # Leaflet map [teammate, NEW]
-│   │   └── ESGCertificate.tsx  # Digital Green Certificate [teammate, NEW]
-│   └── api/
-├── dataset/                    # Source CSV files
-├── IMPLEMENTATION_PLAN.md      # Full technical plan
-├── TEAMMATE_BRIEF.md           # Frontend spec for teammate
+│   │       └── models.py          # negotiation_strategy + chain_hash columns
+│   ├── alembic/versions/          # Database migrations
+│   ├── scripts/                   # smoke.py, inspect_db.py, verify_locking.py
+│   └── tests/                     # 122 automated tests
+├── frontend/
+│   └── src/
+│       ├── pages/
+│       │   ├── SymbiosisMap.tsx   # Leaflet geospatial map
+│       │   ├── ESGCertificate.tsx # Digital Green Certificate
+│       │   ├── NegotiationDetail.tsx # ZOPA chart + SHA-256 audit trail
+│       │   └── OpportunityLab.tsx # Sensitivity simulation
+│       └── components/
+│           └── NegotiationStrategySelector.tsx
+├── dataset/
+│   ├── 01_karnataka_byproduct_symbiosis.csv   # 13 pathways
+│   ├── 02_enterprises_with_location.csv       # 7,933 MSMEs
+│   ├── 05_byproduct_yields_by_nic.csv         # yield chemistry
+│   ├── 06_district_headquarters_coordinates.csv
+│   ├── 07_district_distance_matrix.csv
+│   └── VALIDATION_REPORT.md                   # Source citations
+├── contracts/
+│   └── openapi.json               # Full API contract
 └── README.md
 ```
 
 ---
 
-## Definition of Done
+## What's Next
 
-### Backend (A — completed)
-- [x] A4: `negotiation_strategy` field on listings + requirements (DB + API + migration)
-- [x] A1: ZOPA engine (`compute_zopa`, `concession_target`, `extract_batna`)
-- [x] A1: Boulware/Conceder curves in both fake agent and coordinator
-- [x] A1: Math-guided Gemini briefs (ZOPA, target, BATNA injected per turn)
-- [x] A1: `ZOPA_IMPOSSIBLE` early exit (no wasted API quota)
-- [ ] A2: SHA-256 offer chain stored on every `Offer` row
-- [ ] A3: ESG carbon math engine + `/deals/{id}/certificate` endpoint
-- [ ] Map API: `/map/enterprises` + `/map/symbiosis` endpoints
-
-### Frontend (B — teammate)
-- [ ] B1: Leaflet Symbiosis Map page (`/map`)
-- [ ] B2: ESG Certificate page (`/deals/:id/certificate`)
-- [ ] B3: Strategy slider on create-listing + create-requirement forms
-- [ ] B4: ZOPA badge + audit trail in NegotiationDetail
+- **Verified ESG Credits**: Integration with a third-party carbon registry (Verra or Gold Standard) to convert IPCC-estimated impact into tradeable, independently audited carbon credits
+- **Production Auth & Payments**: UPI-integrated payment escrow triggered on deal close, with Aadhaar-linked business verification
+- **Multi-State Expansion**: Extending the UDYAM dataset pipeline to Tamil Nadu, Maharashtra, and Andhra Pradesh — the symbiosis pathways are already state-agnostic
+- **Price Intelligence Layer**: Real commodity price feeds (rice husk, coal, scrap metal) to dynamically calibrate BATNA values instead of entered demo prices
+- **Regulatory Compliance API**: KSPCB / CPCB compliance module allowing State Pollution Control Boards to audit closed deals in real time via the SHA-256 chain
 
 ---
 
@@ -307,7 +321,10 @@ BitNBuild/
 
 | Name | Role |
 |---|---|
-| Backend / AI / Game Theory | You + Antigravity AI |
-| Frontend | Teammate |
+| **RS Raksha** | Backend architecture · Dataset pipeline & data corrections · Compatibility matching engine · Delivered-cost calculator · Multi-agent coordinator |
+| **Ekansh Nandan Sharma** | Geospatial Symbiosis Map · Game-theoretic ZOPA engine · SHA-256 cryptographic audit trail · ESG carbon impact engine · Testing (122 tests) |
+| **Aadya Dhuri** | Complete frontend (React + TypeScript + Vite) · Leaflet map UI · Negotiation timeline · ESG Certificate page · Opportunity Lab |
 
-> **Hackathon:** BitNBuild 2026 · **Team:** brocxx · **Repo:** github.com/brocxx/BitNBuild2k26
+---
+
+> **Hackathon:** BitNBuild 2026 · **Team:** brocxx · **Repo:** [github.com/brocxx/BitNBuild2k26](https://github.com/brocxx/BitNBuild2k26)
