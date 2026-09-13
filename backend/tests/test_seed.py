@@ -42,21 +42,52 @@ def seeded():
 
 
 def _requirements(db) -> tuple[models.Requirement, models.Requirement]:
+    """The kiln buyer's two requirements: affordable first, then low-budget."""
     rows = list(
         db.scalars(
-            select(models.Requirement).order_by(models.Requirement.buyer_max_total_paise.desc())
+            select(models.Requirement)
+            .where(models.Requirement.receiving_process_id == "brick_kiln_fuel")
+            .order_by(models.Requirement.buyer_max_total_paise.desc())
         )
     )
     assert len(rows) == 2
-    return rows[0], rows[1]  # feasible, infeasible
+    return rows[0], rows[1]
+
+
+def _sawmill_requirement(db) -> models.Requirement:
+    row = db.scalar(
+        select(models.Requirement).where(
+            models.Requirement.receiving_process_id == "timber_drying_boiler_fuel"
+        )
+    )
+    assert row is not None
+    return row
 
 
 def test_seed_creates_the_demo_scenario(seeded):
     _, report = seeded
     assert report.listings == 6
-    assert report.requirements == 2
-    assert report.transport_options == 24
+    assert report.requirements == 3
+    # Two options per listing, per requirement.
+    assert report.transport_options == 6 * 3 * 2
     assert len(report.logins) == 8
+
+
+def test_the_sawmill_buyer_has_a_workable_requirement(seeded):
+    """Regression: buyer2 was seeded with no requirement at all.
+
+    Logging in as the sawmill account showed an empty Matches screen, because
+    the seed only created requirements for the kiln buyer - and even with one,
+    transport options were only generated for the kiln's pairs.
+    """
+    db, _ = seeded
+    requirement = _sawmill_requirement(db)
+    response = build_matches_response(db, requirement)
+
+    assert response.candidates, "the sawmill buyer must have compatible suppliers"
+    assert not response.missing_transport_listing_ids
+    # The second documented pathway for this material, not the kiln one.
+    assert all("boiler" in c.pathway_use.lower() for c in response.candidates)
 
 
 def test_seeded_businesses_are_real_named_enterprises(seeded):

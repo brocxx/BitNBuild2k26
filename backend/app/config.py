@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # Full admin access: used only by the demo-account provisioning script,
     # never on a request path, and never sent to the frontend.
     supabase_secret_key: str = ""
+    # Browser-safe key. Used for password sign-in from scripts so a teammate
+    # can test real logins without ever holding the secret key.
+    supabase_publishable_key: str = ""
     # Only for a legacy project that still signs tokens with a shared HS256
     # secret. Projects on asymmetric signing keys do not need this.
     supabase_jwt_secret: str = ""

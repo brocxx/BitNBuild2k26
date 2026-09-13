@@ -21,7 +21,7 @@ export function ESGCertificate() {
         setLoading(false);
       })
       .catch((err: Error) => {
-        setError(err.message || "Failed to load green certificate");
+        setError(err.message || "Could not load the impact summary");
         setLoading(false);
       });
   }, [dealId]);
@@ -29,7 +29,7 @@ export function ESGCertificate() {
   if (loading) {
     return (
       <div className="panel" style={{ maxWidth: "800px", margin: "2rem auto", textAlign: "center" }}>
-        <p className="loading">Generating Digital Green Certificate…</p>
+        <p className="loading">Generating impact summary…</p>
       </div>
     );
   }
@@ -166,7 +166,7 @@ export function ESGCertificate() {
         </div>
 
         <h3 style={{ fontSize: "1.15rem", marginBottom: "1rem", color: "#2c3e50" }}>
-          Verified Environmental Impact
+          Estimated Environmental Impact
         </h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
           <div style={{ background: "#e8f8f0", border: "1px solid #a3e4d7", borderRadius: "8px", padding: "1.2rem", textAlign: "center" }}>
@@ -185,17 +185,17 @@ export function ESGCertificate() {
               {(esg.landfill_diverted_kg / 1000).toFixed(2)} <span style={{ fontSize: "0.95rem" }}>tonnes</span>
             </div>
             <div style={{ fontSize: "0.75rem", color: "#7f8c8d" }}>
-              100% circular byproduct recovery
+              Full agreed batch diverted from disposal
             </div>
           </div>
 
           <div style={{ background: "#fef9e7", border: "1px solid #f9e79f", borderRadius: "8px", padding: "1.2rem", textAlign: "center" }}>
-            <div style={{ fontSize: "0.85rem", color: "#d4ac0d", fontWeight: 600 }}>Carbon Credits Equivalent</div>
+            <div style={{ fontSize: "0.85rem", color: "#d4ac0d", fontWeight: 600 }}>Carbon Credit Equivalent</div>
             <div style={{ fontSize: "1.75rem", fontWeight: 800, color: "#b7950b", margin: "0.25rem 0" }}>
               {esg.carbon_credits_estimated.toFixed(3)} <span style={{ fontSize: "0.95rem" }}>tCO₂e</span>
             </div>
             <div style={{ fontSize: "0.75rem", color: "#7f8c8d" }}>
-              Standard VCS / Gold Standard units
+              Convention only (1 credit = 1 tCO₂e). Not issued or tradeable credits.
             </div>
           </div>
         </div>
@@ -208,7 +208,13 @@ export function ESGCertificate() {
             <strong>Freight Footprint Deducted:</strong> {(esg.transport_co2e_kg / 1000).toFixed(2)} tonnes CO₂e ({esg.transport_co2e_kg.toFixed(1)} kg)
           </p>
           <p style={{ margin: "0.2rem 0" }}>
-            <strong>Methodology Standard:</strong> {cert.methodology}
+            <strong>Methodology:</strong> {cert.methodology}
+          </p>
+          <p style={{ margin: "0.6rem 0 0", paddingTop: "0.6rem", borderTop: "1px solid #eaeded" }}>
+            <strong>Basis of these figures.</strong> Calculated by this application from published
+            emission factors and the agreed quantity of this one shipment. They are estimates, not
+            measurements. Nothing here has been audited, verified by a third party, or registered
+            with any carbon credit scheme, and no tradeable credit has been issued.
           </p>
         </div>
 
@@ -219,7 +225,7 @@ export function ESGCertificate() {
           </div>
           <div style={{ textAlign: "right" }}>
             Karnataka Circular Economy Authority<br />
-            <strong>Official Digital Green Ledger</strong>
+            <strong>Self-issued estimate — not an accredited certificate</strong>
           </div>
         </div>
       </div>

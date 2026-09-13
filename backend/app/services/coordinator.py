@@ -74,6 +74,53 @@ def _aware(value: datetime) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
 
 
+def chain_hash_for(offer: models.Offer, prev_hash: str) -> str:
+    """The one definition of an offer's audit hash.
+
+    Every field here is stored on the offer row, so the chain can be recomputed
+    from the database alone - which is the whole point of a tamper-evident log.
+    Writing and verifying share this function so they cannot drift apart.
+    """
+    payload = json.dumps(
+        {
+            "negotiation_id": offer.negotiation_id,
+            "round": offer.round,
+            "author": offer.author,
+            "action": offer.action,
+            "unit_price_paise_per_tonne": offer.unit_price_paise_per_tonne,
+            "buyer_total_paise": offer.buyer_total_paise,
+            "timestamp_utc": _aware(offer.created_at).isoformat(),
+            "prev_hash": prev_hash,
+        },
+        sort_keys=True,
+    )
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def verify_offer_chain(db: Session, negotiation_id: str) -> tuple[bool, str]:
+    """Recompute the whole chain. Returns (intact, human-readable detail)."""
+    offers = list(
+        db.scalars(
+            select(models.Offer)
+            .where(models.Offer.negotiation_id == negotiation_id)
+            .order_by(models.Offer.created_at, models.Offer.id)
+        )
+    )
+    if not offers:
+        return True, "no offers to verify"
+
+    prev_hash = "GENESIS"
+    for index, offer in enumerate(offers):
+        expected = chain_hash_for(offer, prev_hash)
+        if expected != offer.chain_hash:
+            return False, (
+                f"chain breaks at offer {index + 1} of {len(offers)} "
+                f"({offer.author} {offer.action}, round {offer.round})"
+            )
+        prev_hash = offer.chain_hash
+    return True, f"{len(offers)} offers verified"
+
+
 class NegotiationAborted(Exception):
     """Terminal execution error: the run ends as `failed`."""
 
@@ -617,7 +664,7 @@ class Coordinator:
         prev_offers = self.db.scalars(
             select(models.Offer)
             .where(models.Offer.negotiation_id == negotiation.id)
-            .order_by(models.Offer.created_at.desc())
+            .order_by(models.Offer.created_at.desc(), models.Offer.id.desc())
             .limit(1)
         ).first()
         prev_hash = prev_offers.chain_hash if prev_offers else "GENESIS"
@@ -640,23 +687,15 @@ class Coordinator:
             explanation=scrub_explanation(explanation, private_values),
             expires_at=now + OFFER_VALIDITY,
             round=round_number,
+            # Set explicitly rather than letting the column default fire at
+            # flush time: the hash below commits to this timestamp, so it has
+            # to be the one actually stored on the row. Otherwise the chain is
+            # unverifiable - nobody can recompute a hash over a timestamp that
+            # was never persisted.
+            created_at=now,
         )
 
-        # Compute chain hash over deterministic payload.
-        chain_payload = json.dumps(
-            {
-                "negotiation_id": negotiation.id,
-                "round": round_number,
-                "author": author,
-                "action": action,
-                "unit_price_paise_per_tonne": unit_price,
-                "buyer_total_paise": costs.buyer_total_paise,
-                "timestamp_utc": now.isoformat(),
-                "prev_hash": prev_hash,
-            },
-            sort_keys=True,
-        )
-        offer.chain_hash = hashlib.sha256(chain_payload.encode()).hexdigest()
+        offer.chain_hash = chain_hash_for(offer, prev_hash)
         self.db.add(offer)
         self.db.flush()
         return offer

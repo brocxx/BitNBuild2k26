@@ -114,7 +114,10 @@ def get_deal_certificate(
 
     return schemas.GreenCertificate(
         certificate_id=cert_id,
-        issuer="Karnataka Industrial Byproduct Exchange (KIB) & Circular Economy Authority",
+        # No invented authority. This application issues the summary; it is not
+        # a registry, an accredited verifier, or a government body, and saying
+        # otherwise would be a false claim about who stands behind the numbers.
+        issuer="Karnataka Industrial Byproduct Exchange (self-issued estimate)",
         deal_id=deal.id,
         trade_date=deal.created_at,
         seller=serialized.seller,
@@ -125,7 +128,12 @@ def get_deal_certificate(
         transport_distance_km=round(distance_km, 1),
         esg_metrics=serialized.esg_metrics,  # type: ignore[arg-type]
         verification_hash=verification_hash,
-        methodology="IPCC 2006 Guidelines for National Greenhouse Gas Inventories (Vol 2 Energy) & MoRTH India Freight Factor 2022",
+        methodology=(
+            "Estimated by this application using published emission factors: "
+            "IPCC 2006 Guidelines for National Greenhouse Gas Inventories "
+            "(Vol 2 Energy) and MoRTH India freight factors. Not independently "
+            "verified or audited."
+        ),
     )
 
 

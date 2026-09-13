@@ -141,8 +141,8 @@ export function OpportunityLab() {
 
           {disruption && (
             <div className="recovery-alert">
-              <b>Truck cancelled.</b> The logistics broker should re-check the remaining compatible candidates from the
-              requirement results, then recalculate delivered cost before renegotiating.
+              <b>Truck cancelled.</b> The logistics broker re-checks the remaining compatible suppliers for this
+              requirement and recalculates delivered cost before reopening negotiation.
             </div>
           )}
         </section>
@@ -151,16 +151,24 @@ export function OpportunityLab() {
       <section className="panel panel--flush requirement-gate">
         <div>
           <span className="eyebrow">Supplier explorer</span>
-          <h2>Supplier tables belong to a requirement</h2>
+          <h2>Find suppliers for a requirement</h2>
           <p>
-            The app no longer shows a hardcoded supplier table here. Submit material, receiving industry, quantity,
-            moisture limit, delivery window and budget first. The next screen then shows compatible suppliers returned
-            for that requirement.
+            Compatibility depends on what you are sourcing. Enter your material, receiving process, quantity, moisture
+            limit, delivery window and budget, and the next screen shows the suppliers that qualify for it — with the
+            reason any others were ruled out.
           </p>
         </div>
         <Link className="button button--primary" to="/requirements">
           Enter requirement →
         </Link>
+      </section>
+
+      <section className="panel panel--flush">
+        <span className="eyebrow">Roadmap</span>
+        <h2>Where the exchange goes next</h2>
+        <p>
+          Not yet available. These build on the same dataset and agent layer as the exchange above.
+        </p>
       </section>
 
       <section className="mini-feature-grid">
@@ -181,7 +189,7 @@ export function OpportunityLab() {
           <div className="mini-feature" key={x}>
             <span>{String(i + 1).padStart(2, "0")}</span>
             <strong>{x}</strong>
-            <small>{[1, 2, 5, 6, 9].includes(i) ? "Core-ready" : "Prototype extension"}</small>
+            <small>Planned</small>
           </div>
         ))}
       </section>

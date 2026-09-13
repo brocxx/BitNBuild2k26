@@ -39,7 +39,11 @@ def buyer_token() -> str:
     response = httpx.post(
         f"{base}/auth/v1/token",
         params={"grant_type": "password"},
-        headers={"apikey": settings.supabase_secret_key},
+        # Publishable key first: sign-in only needs a browser-safe key.
+        headers={
+            "apikey": settings.supabase_publishable_key
+            or settings.supabase_secret_key
+        },
         json={"email": BUYER_EMAIL, "password": DEMO_PASSWORD},
         timeout=30,
     )
