@@ -3,7 +3,6 @@
 > **One factory's waste is another factory's raw material — and we prove it.**
 
 [![Tests](https://img.shields.io/badge/tests-122%20passed-brightgreen)](#testing)
-[![License](https://img.shields.io/badge/license-MIT-blue)](#)
 [![Built at](https://img.shields.io/badge/Built%20at-BitNBuild%202026-orange)](#)
 
 ---
@@ -110,7 +109,11 @@ An interactive parameter sensitivity simulator lets plant managers model price, 
 **Backend**
 - Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic v2
 - Custom ZOPA engine — pure Python, no ML dependencies
-- Google Gemini 2.0 Flash (structured JSON output mode)
+- Google Gemini 3.1 Flash-Lite (structured JSON output mode) — chosen over the
+  full Flash models, whose free-tier quota of ~20 requests/day cannot complete a
+  single three-seller negotiation (up to 27 model calls). Flash-Lite allows ~500/day
+  but caps at 15 requests/minute, so calls are rate-paced and a 429 is retried using
+  the delay the API itself returns.
 
 **Frontend**
 - React 18, Vite, TypeScript
