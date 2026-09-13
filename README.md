@@ -24,10 +24,10 @@ Traditional B2B directories are dumb classifieds. They have zero chemical compat
 
 It combines real government-registered enterprise data with peer-reviewed chemistry, a mathematically-grounded negotiation engine, and cryptographic deal verification — replacing cold calls and manual brokers with an end-to-end platform that:
 
-1. **Finds** compatible buyers and sellers from 7,933 real UDYAM-registered Karnataka factories across 13 IPCC/FAO-validated circular economy pathways
+1. **Finds** compatible buyers and sellers from 7,933 real UDYAM-registered Karnataka factories across 14 IPCC/FAO-validated circular economy pathways
 2. **Matches** them by seven compatibility checks ranked by true *delivered* cost — not just proximity
 3. **Negotiates** through autonomous AI agents using formal Game Theory concession strategies (Boulware and Conceder curves), with all financial arithmetic enforced deterministically in Python — never inside the LLM
-4. **Protects** every party's private limits: a buyer's budget and a seller's floor price are cryptographically isolated and never exposed to the other side or its agent
+4. **Protects** every party's private limits: a buyer's budget and a seller's floor price sit behind separate response schemas that structurally cannot carry them, and are never exposed to the other side or its agent
 5. **Certifies** every closed deal with a SHA-256 chained audit trail and a Digital Green Certificate quantifying CO₂e avoided, landfill diverted, and carbon credits earned
 
 ---
@@ -35,7 +35,7 @@ It combines real government-registered enterprise data with peer-reviewed chemis
 ## Key Features
 
 ### 🗺️ Geospatial Industrial Symbiosis Map
-An interactive Leaflet canvas rendering 7,933 real Karnataka MSME enterprises — sourced from the Government of India's UDYAM registry — categorised by NIC industrial sector and mapped onto 13 circular economy byproduct pathways validated against IPCC, FAO, and IRRI literature. A configurable proximity radius engine instantly surfaces compatible producer-receiver pairs for any district in Karnataka.
+An interactive Leaflet canvas rendering 7,933 real Karnataka MSME enterprises — sourced from the Government of India's UDYAM registry — categorised by NIC industrial sector and mapped onto 14 circular economy byproduct pathways validated against IPCC, FAO, and IRRI literature. A configurable proximity radius engine instantly surfaces compatible producer-receiver pairs for any district in Karnataka.
 
 ### ⚖️ Game-Theoretic Negotiation Engine
 A formal Zone of Possible Agreement (ZOPA) engine mathematically determines deal feasibility *before* any LLM call is made — if no price satisfies both sides after freight, the system returns an honest `ZOPA_IMPOSSIBLE` result and burns zero API quota. When a deal is viable, three autonomous Gemini agents (Buyer, Seller, Logistics Broker) negotiate using configurable concession strategies — `"conceder"` (collaborative, linear walk to floor) or `"boulware"` (firm hold, deadline-driven drop, named after GE's Lemuel Boulware, 1948).
@@ -97,7 +97,7 @@ An interactive parameter sensitivity simulator lets plant managers model price, 
                   │
 ┌─────────────────▼───────────────────────────────────────────┐
 │               DATASET (read-only reference)                   │
-│  7,933 Enterprises · 31 Districts · 13 Symbiosis Pathways    │
+│  7,933 Enterprises · 31 Districts · 14 Symbiosis Pathways    │
 │  District distance matrix · Yield chemistry ratios           │
 │  Sources: UDYAM Registry, IPCC 2006, FAO, IRRI, Survey of India │
 └─────────────────────────────────────────────────────────────┘
@@ -120,7 +120,7 @@ An interactive parameter sensitivity simulator lets plant managers model price, 
 **Data & Intelligence**
 - Government UDYAM MSME Registry (Karnataka) — 7,933 enterprises
 - IPCC 2006 emission factors (carbon math)
-- FAO / IRRI byproduct yield chemistry ratios (13 validated pathways)
+- FAO / IRRI byproduct yield chemistry ratios (14 validated pathways)
 - SHA-256 cryptographic audit chaining (Python `hashlib`)
 
 **Infrastructure**
@@ -200,7 +200,7 @@ npm install
 
 # Start development server
 npm run dev
-# → http://localhost:5174
+# → http://localhost:5173
 ```
 
 ### Demo Login Credentials
@@ -208,7 +208,7 @@ npm run dev
 | Email | Role |
 |---|---|
 | `buyer1@demo.bitnbuild.local` | Brick kiln buyer (Mysuru) |
-| `seller1@demo.bitnbuild.local` | Rice husk seller (Davangere) |
+| `seller1@demo.bitnbuild.local` | Rice husk seller (Bengaluru Urban) |
 
 Use token format: `Authorization: Bearer dev:<email>`
 
@@ -294,7 +294,7 @@ BitNBuild/
 │       └── components/
 │           └── NegotiationStrategySelector.tsx
 ├── dataset/
-│   ├── 01_karnataka_byproduct_symbiosis.csv   # 13 pathways
+│   ├── 01_karnataka_byproduct_symbiosis.csv   # 14 pathways
 │   ├── 02_enterprises_with_location.csv       # 7,933 MSMEs
 │   ├── 05_byproduct_yields_by_nic.csv         # yield chemistry
 │   ├── 06_district_headquarters_coordinates.csv
@@ -327,4 +327,4 @@ BitNBuild/
 
 ---
 
-> **Hackathon:** BitNBuild 2026 · **Team:** brocxx · **Repo:** [github.com/brocxx/BitNBuild2k26](https://github.com/brocxx/BitNBuild2k26)
+> **Hackathon:** BitNBuild 2026 · **Team:** R.A.E · **Repo:** [github.com/brocxx/BitNBuild2k26](https://github.com/brocxx/BitNBuild2k26)
